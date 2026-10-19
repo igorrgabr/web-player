@@ -4,13 +4,12 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Acessos acidentais via `localhost` são redirecionados para `127.0.0.1` antes de iniciar o fluxo OAuth, garantindo consistência de sessão e conformidade com a regra de Redirect URI do Spotify.
-- [ ] Iniciar o login redireciona para a página de autorização do Spotify com `state` criptograficamente aleatório salvo na sessão e os escopos `streaming`, `user-read-email`, `user-read-private`, `user-read-playback-state`, `user-modify-playback-state` e `user-read-currently-playing`.
-- [ ] O callback OAuth rejeita requisições com `state` ausente ou divergente (`403 Forbidden`).
-- [ ] Contas Spotify que não possuam `product === 'premium'` recebem aviso claro de que a reprodução exige assinatura Spotify Premium.
-- [ ] Os campos `access_token` e `refresh_token` da **Conta Spotify** são gravados criptografados em repouso no banco de dados e vinculados ao **Ouvinte** de forma isolada.
-- [ ] Consultar o token ativo da sessão renova transparentemente o `access_token` quando estiver expirado ou a menos de 5 minutos de expirar, preservando o `refresh_token` existente caso a resposta de renovação do Spotify não inclua um novo.
-- [ ] Testes automatizados (usando `Http::fake()` como única costura externa) cobrem redirecionamento OAuth, falha de `state`, validação de conta Premium, criptografia dos tokens, isolamento entre **Ouvintes** e renovação automática de token expirado.
-
+- [x] Acessos acidentais via `localhost` são redirecionados para `127.0.0.1` antes de iniciar o fluxo OAuth, garantindo consistência de sessão e conformidade com a regra de Redirect URI do Spotify.
+- [x] Iniciar o login redireciona para a página de autorização do Spotify com `state` criptograficamente aleatório salvo na sessão e os escopos `streaming`, `user-read-email`, `user-read-private`, `user-read-playback-state`, `user-modify-playback-state` e `user-read-currently-playing`.
+- [x] O callback OAuth rejeita requisições com `state` ausente ou divergente (`403 Forbidden`).
+- [x] Contas Spotify que não possuam `product === 'premium'` recebem aviso claro de que a reprodução exige assinatura Spotify Premium.
+- [x] Os campos `access_token` e `refresh_token` da **Conta Spotify** são gravados criptografados em repouso no banco de dados e vinculados ao **Ouvinte** de forma isolada.
+- [x] Consultar o token ativo da sessão renova transparentemente o `access_token` quando estiver expirado ou a menos de 5 minutos de expirar, preservando o `refresh_token` existente caso a resposta de renovação do Spotify não inclua um novo.
+- [x] Testes automatizados (usando `Http::fake()` como única costura externa) cobrem redirecionamento OAuth, falha de `state`, validação de conta Premium, criptografia dos tokens, isolamento entre **Ouvintes** e renovação automática de token expirado.

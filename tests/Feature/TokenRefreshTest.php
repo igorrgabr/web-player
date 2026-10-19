@@ -91,4 +91,47 @@ class TokenRefreshTest extends TestCase
                 && ($request['refresh_token'] ?? null) === 'original-refresh-token-to-keep';
         });
     }
+
+    public function test_token_endpoint_refreshes_already_expired_token_and_updates_rotated_refresh_token(): void
+    {
+        Http::fake([
+            'https://accounts.spotify.com/api/token' => Http::response([
+                'access_token' => 'fresh-access-after-expiration',
+                'refresh_token' => 'rotated-refresh-token',
+                'token_type' => 'Bearer',
+                'expires_in' => 3600,
+                'scope' => 'streaming',
+            ], 200),
+        ]);
+
+        $user = User::create([
+            'name' => 'Ouvinte Expirado',
+            'email' => 'expirado@example.com',
+        ]);
+
+        $account = SpotifyAccount::create([
+            'user_id' => $user->id,
+            'spotify_user_id' => 'spotify-expired',
+            'display_name' => 'Ouvinte Expirado',
+            'email' => 'expirado@example.com',
+            'product_type' => 'premium',
+            'access_token' => 'expired-token',
+            'refresh_token' => 'old-refresh-token',
+            'token_expires_at' => now()->subMinutes(15),
+            'scopes' => 'streaming',
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('http://127.0.0.1:8000/player/token')
+            ->assertOk()
+            ->assertJson([
+                'access_token' => 'fresh-access-after-expiration',
+                'spotify_user_id' => 'spotify-expired',
+            ]);
+
+        $account->refresh();
+        $this->assertSame('fresh-access-after-expiration', $account->access_token);
+        $this->assertSame('rotated-refresh-token', $account->refresh_token);
+    }
 }
+

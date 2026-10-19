@@ -33,3 +33,4 @@ class PlayerController extends Controller
         ]);
     }
 }
+

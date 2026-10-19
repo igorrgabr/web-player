@@ -16,3 +16,4 @@ return [
         'user-read-currently-playing',
     ],
 ];
+

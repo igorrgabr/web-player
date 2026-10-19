@@ -161,5 +161,8 @@ class SpotifyAuthTest extends TestCase
             ->withSession(['spotify_oauth_state' => 'free-state-2'])
             ->get('http://127.0.0.1:8000/auth/spotify/callback?code=free-code&state=free-state-2')
             ->assertSee('Spotify Premium');
+
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('spotify_accounts', 0);
     }
 }

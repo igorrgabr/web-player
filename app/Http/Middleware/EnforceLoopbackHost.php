@@ -20,3 +20,4 @@ class EnforceLoopbackHost
         return $next($request);
     }
 }
+

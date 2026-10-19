@@ -44,4 +44,11 @@ class SpotifyAccount extends Model
     {
         return strtolower((string) $this->product_type) === 'premium';
     }
+
+    public function hasValidToken(int $bufferMinutes = 5): bool
+    {
+        return $this->token_expires_at !== null
+            && $this->token_expires_at->greaterThan(now()->addMinutes($bufferMinutes));
+    }
 }
+

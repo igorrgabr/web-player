@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Exceptions\SpotifyPremiumRequiredException;
 use App\Http\Controllers\Controller;
 use App\Services\Spotify\SpotifyAuthService;
 use Illuminate\Http\RedirectResponse;
@@ -42,11 +43,11 @@ class SpotifyAuthController extends Controller
             ]);
         }
 
-        $account = $this->authService->authenticateWithCode($code);
-
-        if (! $account->isPremium()) {
+        try {
+            $account = $this->authService->authenticateWithCode($code);
+        } catch (SpotifyPremiumRequiredException $exception) {
             return redirect()->route('login')->withErrors([
-                'spotify' => 'A reprodução completa exige uma Conta Spotify com assinatura Spotify Premium ativa.',
+                'spotify' => $exception->getMessage(),
             ]);
         }
 

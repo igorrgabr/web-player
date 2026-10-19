@@ -2,8 +2,10 @@
 
 namespace App\Services\Spotify;
 
+use App\Exceptions\SpotifyPremiumRequiredException;
 use App\Models\SpotifyAccount;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -25,33 +27,32 @@ class SpotifyAuthService
 
     public function authenticateWithCode(string $code): SpotifyAccount
     {
-        $tokenResponse = Http::asForm()
-            ->withBasicAuth((string) config('spotify.client_id'), (string) config('spotify.client_secret'))
-            ->post((string) config('spotify.token_url'), [
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'redirect_uri' => config('spotify.redirect_uri'),
-            ]);
+        $tokenData = $this->requestToken([
+            'grant_type' => 'authorization_code',
+            'code' => $code,
+            'redirect_uri' => config('spotify.redirect_uri'),
+        ], 'Falha ao trocar o código de autorização com o Spotify.');
 
-        if (! $tokenResponse->successful()) {
-            throw new RuntimeException('Falha ao trocar o código de autorização com o Spotify.');
-        }
-
-        $tokenData = $tokenResponse->json();
         $accessToken = (string) ($tokenData['access_token'] ?? '');
 
-        $profileResponse = Http::withToken($accessToken)
+        $accountResponse = Http::withToken($accessToken)
             ->get(rtrim((string) config('spotify.api_base_url'), '/') . '/me');
 
-        if (! $profileResponse->successful()) {
-            throw new RuntimeException('Falha ao consultar o perfil da Conta Spotify.');
+        if (! $accountResponse->successful()) {
+            throw new RuntimeException('Falha ao consultar os dados da Conta Spotify.');
         }
 
-        $profile = $profileResponse->json();
-        $spotifyUserId = (string) ($profile['id'] ?? '');
-        $email = $profile['email'] ?? ($spotifyUserId . '@spotify.local');
-        $displayName = (string) ($profile['display_name'] ?: $spotifyUserId);
-        $avatarUrl = $profile['images'][0]['url'] ?? null;
+        $accountData = $accountResponse->json();
+        $productType = (string) ($accountData['product'] ?? 'free');
+
+        if (strtolower($productType) !== 'premium') {
+            throw new SpotifyPremiumRequiredException();
+        }
+
+        $spotifyUserId = (string) ($accountData['id'] ?? '');
+        $email = $accountData['email'] ?? ($spotifyUserId . '@spotify.local');
+        $displayName = (string) ($accountData['display_name'] ?: $spotifyUserId);
+        $avatarUrl = $accountData['images'][0]['url'] ?? null;
         $expiresIn = (int) ($tokenData['expires_in'] ?? 3600);
 
         return DB::transaction(function () use (
@@ -59,7 +60,8 @@ class SpotifyAuthService
             $email,
             $displayName,
             $avatarUrl,
-            $profile,
+            $accountData,
+            $productType,
             $tokenData,
             $accessToken,
             $expiresIn
@@ -73,21 +75,25 @@ class SpotifyAuthService
                     'email' => $email,
                 ]);
             } else {
-                $user = User::updateOrCreate(
-                    ['email' => $email],
-                    ['name' => $displayName]
-                );
+                $userEmail = User::where('email', $email)->exists()
+                    ? $spotifyUserId . '@spotify.local'
+                    : $email;
+
+                $user = User::create([
+                    'name' => $displayName,
+                    'email' => $userEmail,
+                ]);
             }
 
             return SpotifyAccount::updateOrCreate(
-                ['user_id' => $user->id],
+                ['spotify_user_id' => $spotifyUserId],
                 [
-                    'spotify_user_id' => $spotifyUserId,
+                    'user_id' => $user->id,
                     'display_name' => $displayName,
                     'email' => $email,
                     'avatar_url' => $avatarUrl,
-                    'country' => $profile['country'] ?? null,
-                    'product_type' => (string) ($profile['product'] ?? 'free'),
+                    'country' => $accountData['country'] ?? null,
+                    'product_type' => $productType,
                     'access_token' => $accessToken,
                     'refresh_token' => (string) ($tokenData['refresh_token'] ?? ($existingAccount->refresh_token ?? '')),
                     'token_expires_at' => now()->addSeconds($expiresIn),
@@ -99,30 +105,23 @@ class SpotifyAuthService
 
     public function ensureValidToken(SpotifyAccount $account): SpotifyAccount
     {
-        if ($account->token_expires_at && $account->token_expires_at->greaterThan(now()->addMinutes(5))) {
+        if ($account->hasValidToken()) {
             return $account;
         }
 
-        return \Illuminate\Support\Facades\Cache::lock('spotify-token-refresh-' . $account->user_id, 10)
+        return Cache::lock('spotify-token-refresh-' . $account->user_id, 10)
             ->block(5, function () use ($account) {
                 $account->refresh();
 
-                if ($account->token_expires_at && $account->token_expires_at->greaterThan(now()->addMinutes(5))) {
+                if ($account->hasValidToken()) {
                     return $account;
                 }
 
-                $response = Http::asForm()
-                    ->withBasicAuth((string) config('spotify.client_id'), (string) config('spotify.client_secret'))
-                    ->post((string) config('spotify.token_url'), [
-                        'grant_type' => 'refresh_token',
-                        'refresh_token' => $account->refresh_token,
-                    ]);
+                $data = $this->requestToken([
+                    'grant_type' => 'refresh_token',
+                    'refresh_token' => $account->refresh_token,
+                ], 'Falha ao renovar o token da Conta Spotify.');
 
-                if (! $response->successful()) {
-                    throw new RuntimeException('Falha ao renovar o token da Conta Spotify.');
-                }
-
-                $data = $response->json();
                 $expiresIn = (int) ($data['expires_in'] ?? 3600);
 
                 $account->update([
@@ -136,5 +135,18 @@ class SpotifyAuthService
 
                 return $account->fresh();
             });
+    }
+
+    private function requestToken(array $payload, string $errorMessage): array
+    {
+        $response = Http::asForm()
+            ->withBasicAuth((string) config('spotify.client_id'), (string) config('spotify.client_secret'))
+            ->post((string) config('spotify.token_url'), $payload);
+
+        if (! $response->successful()) {
+            throw new RuntimeException($errorMessage);
+        }
+
+        return $response->json();
     }
 }

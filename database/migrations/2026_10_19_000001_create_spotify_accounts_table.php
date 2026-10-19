@@ -30,3 +30,4 @@ class CreateSpotifyAccountsTable extends Migration
         Schema::dropIfExists('spotify_accounts');
     }
 }
+

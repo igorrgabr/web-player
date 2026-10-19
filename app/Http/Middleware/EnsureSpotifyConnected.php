@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Exceptions\SpotifyPremiumRequiredException;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -15,12 +16,12 @@ class EnsureSpotifyConnected
         if (! $account || ! $account->isPremium()) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'A reprodução exige uma Conta Spotify Premium vinculada.',
+                    'message' => SpotifyPremiumRequiredException::DEFAULT_MESSAGE,
                 ], 403);
             }
 
             return redirect()->route('login')->withErrors([
-                'spotify' => 'A reprodução completa exige uma Conta Spotify com assinatura Spotify Premium ativa.',
+                'spotify' => SpotifyPremiumRequiredException::DEFAULT_MESSAGE,
             ]);
         }
 

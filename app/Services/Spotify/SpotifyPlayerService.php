@@ -55,13 +55,32 @@ class SpotifyPlayerService
 
         if ($currentUri !== null) {
             $preference = $user->getOrCreatePreferences();
+            $matchedTrack = \App\Models\Track::where('spotify_track_uri', $currentUri)->first();
+
             $preference->update([
+                'last_played_track_id' => $matchedTrack ? $matchedTrack->id : $preference->last_played_track_id,
                 'last_played_track_uri' => $currentUri,
                 'preferred_device_id' => $deviceId ?? $preference->preferred_device_id,
             ]);
         }
 
         return $currentUri;
+    }
+
+    public function playNormalizedTrackList(User $user, array $normalizedTracks, int $offset = 0): ?\App\Models\Track
+    {
+        if (empty($normalizedTracks)) {
+            return null;
+        }
+
+        $persistedTracks = \App\Models\Track::upsertManyFromCatalog($normalizedTracks);
+        $uris = array_values(array_map(fn ($t) => $t->spotify_track_uri, $persistedTracks));
+        $safeOffset = max(0, min($offset, max(0, count($persistedTracks) - 1)));
+        $preference = $user->getOrCreatePreferences();
+
+        $this->playContext($user, $uris, $safeOffset, $preference->preferred_device_id);
+
+        return $persistedTracks[$safeOffset] ?? null;
     }
 
     public function pause(User $user, ?string $deviceId = null): void

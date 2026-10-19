@@ -4,13 +4,13 @@
 
 **Blocked by:** 02: Casca Persistente (App Shell) e Reprodutor Web com Controle de Áudio
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] A busca consulta o catálogo do Spotify paginando com limite de 10 itens por requisição (compatível com o teto do *Development Mode*) e permite carregar mais resultados sob demanda.
-- [ ] Os resultados da busca exibem **Faixas** (capa, título, artista, álbum, duração e ação de tocar), Artistas e Álbuns.
-- [ ] Clicar em um Álbum exibe seu cabeçalho e todas as suas **Faixas**, permitindo tocar o álbum completo a partir de qualquer posição.
-- [ ] Clicar em um Artista exibe seu perfil, suas principais **Faixas** obtidas via busca filtrada por artista e sua discografia de álbuns/singles (sem depender dos endpoints legados restritos no *Development Mode*).
-- [ ] Clicar para reproduzir qualquer **Faixa** registra/atualiza seus metadados no catálogo local de **Faixas** e inicia a reprodução enviando o **Contexto de Reprodução** (`uris` da lista + `offset` da faixa escolhida).
-- [ ] Respostas de limite de taxa (`429 Too Many Requests` com `Retry-After`) ou falhas da API do Spotify são tratadas graciosamente, exibindo feedback claro na interface sem quebrar a sessão.
-- [ ] Testes automatizados (com `Http::fake()`) validam a pesquisa paginada, a visualização de Álbum e Artista, o *upsert* no catálogo local de **Faixas**, o envio de **Contexto de Reprodução** com `offset` e o tratamento de erro HTTP 429.
+- [x] A busca consulta o catálogo do Spotify paginando com limite de 10 itens por requisição (compatível com o teto do *Development Mode*) e permite carregar mais resultados sob demanda.
+- [x] Os resultados da busca exibem **Faixas** (capa, título, artista, álbum, duração e ação de tocar), Artistas e Álbuns.
+- [x] Clicar em um Álbum exibe seu cabeçalho e todas as suas **Faixas**, permitindo tocar o álbum completo a partir de qualquer posição.
+- [x] Clicar em um Artista exibe seu perfil, suas principais **Faixas** obtidas via busca filtrada por artista e sua discografia de álbuns/singles (sem depender dos endpoints legados restritos no *Development Mode*).
+- [x] Clicar para reproduzir qualquer **Faixa** registra/atualiza seus metadados no catálogo local de **Faixas** e inicia a reprodução enviando o **Contexto de Reprodução** (`uris` da lista + `offset` da faixa escolhida).
+- [x] Respostas de limite de taxa (`429 Too Many Requests` com `Retry-After`) ou falhas da API do Spotify são tratadas graciosamente, exibindo feedback claro na interface sem quebrar a sessão.
+- [x] Testes automatizados (com `Http::fake()`) validam a pesquisa paginada, a visualização de Álbum e Artista, o *upsert* no catálogo local de **Faixas**, o envio de **Contexto de Reprodução** com `offset` e o tratamento de erro HTTP 429.
 

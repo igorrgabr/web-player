@@ -104,6 +104,28 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
                 const detail = event.detail || {};
                 this.playContext(detail.uris || [], detail.offset || 0);
             });
+
+            window.addEventListener('spotify:context-started', (event) => {
+                const detail = event.detail || {};
+                this.hasActiveSession = true;
+                this.isPaused = false;
+                this.positionMs = 0;
+
+                if (detail.durationMs) {
+                    this.durationMs = Number(detail.durationMs);
+                }
+
+                if (detail.track) {
+                    this.currentTrack = {
+                        uri: detail.track.uri || null,
+                        title: detail.track.title || null,
+                        artistName: detail.track.artistName || null,
+                        albumName: detail.track.albumName || null,
+                        albumCoverUrl: detail.track.albumCoverUrl || null,
+                    };
+                    syncMediaSessionMetadata(this.currentTrack, false);
+                }
+            });
         },
 
         applySdkState(state) {

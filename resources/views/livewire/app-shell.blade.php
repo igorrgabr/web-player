@@ -58,10 +58,7 @@
                 <p class="text-sm text-zinc-400">Bem-vindo ao seu Web Player pessoal conectado ao Spotify Premium.</p>
             </section>
         @elseif ($activeView === 'search')
-            <section>
-                <h1 class="text-2xl font-bold text-white mb-2">Pesquisar no catálogo</h1>
-                <p class="text-sm text-zinc-400">Busque Faixas, Artistas e Álbuns do catálogo do Spotify.</p>
-            </section>
+            @livewire('search-catalog')
         @elseif ($activeView === 'favorites')
             <section>
                 <h1 class="text-2xl font-bold text-white mb-2">Faixas Favoritas</h1>
@@ -72,13 +69,9 @@
                 <h1 class="text-2xl font-bold text-white mb-2">Playlist Local #{{ $contextId }}</h1>
             </section>
         @elseif ($activeView === 'album')
-            <section>
-                <h1 class="text-2xl font-bold text-white mb-2">Álbum #{{ $contextId }}</h1>
-            </section>
+            @livewire('album-view', ['albumId' => (string) $contextId], key('album-' . $contextId))
         @elseif ($activeView === 'artist')
-            <section>
-                <h1 class="text-2xl font-bold text-white mb-2">Artista #{{ $contextId }}</h1>
-            </section>
+            @livewire('artist-view', ['artistId' => (string) $contextId], key('artist-' . $contextId))
         @endif
     </main>
 </div>

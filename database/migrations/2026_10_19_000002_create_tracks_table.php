@@ -28,3 +28,4 @@ class CreateTracksTable extends Migration
         Schema::dropIfExists('tracks');
     }
 }
+

@@ -23,7 +23,9 @@ class SpotifyCatalogService
                 'tracks' => [],
                 'tracks_total' => 0,
                 'artists' => [],
+                'artists_total' => 0,
                 'albums' => [],
+                'albums_total' => 0,
             ];
         }
 
@@ -38,7 +40,9 @@ class SpotifyCatalogService
             'tracks' => array_map([$this, 'normalizeTrack'], $data['tracks']['items'] ?? []),
             'tracks_total' => (int) ($data['tracks']['total'] ?? count($data['tracks']['items'] ?? [])),
             'artists' => array_map([$this, 'normalizeArtist'], $data['artists']['items'] ?? []),
+            'artists_total' => (int) ($data['artists']['total'] ?? count($data['artists']['items'] ?? [])),
             'albums' => array_map([$this, 'normalizeAlbum'], $data['albums']['items'] ?? []),
+            'albums_total' => (int) ($data['albums']['total'] ?? count($data['albums']['items'] ?? [])),
         ];
     }
 
@@ -53,9 +57,26 @@ class SpotifyCatalogService
             'images' => $rawAlbum['images'] ?? [],
         ];
 
+        $rawItems = $rawAlbum['tracks']['items'] ?? [];
+        $totalTracks = (int) ($rawAlbum['tracks']['total'] ?? count($rawItems));
+        $nextUrl = $rawAlbum['tracks']['next'] ?? null;
+
+        while (! empty($nextUrl) && count($rawItems) < $totalTracks) {
+            $page = $this->client->request($user, 'GET', '/albums/' . urlencode($albumId) . '/tracks', [
+                'limit' => 50,
+                'offset' => count($rawItems),
+            ]);
+            $pageItems = $page['items'] ?? [];
+            if (empty($pageItems)) {
+                break;
+            }
+            $rawItems = array_merge($rawItems, $pageItems);
+            $nextUrl = $page['next'] ?? null;
+        }
+
         $tracks = array_map(
             fn (array $item) => $this->normalizeTrack($item, $fallbackAlbum),
-            $rawAlbum['tracks']['items'] ?? []
+            $rawItems
         );
 
         return [
@@ -69,9 +90,10 @@ class SpotifyCatalogService
         $rawArtist = $this->client->request($user, 'GET', '/artists/' . urlencode($artistId));
         $artist = $this->normalizeArtist($rawArtist);
 
+        $sanitizedArtistName = trim(str_replace('"', '', $artist['name']));
         $searchResults = $this->search(
             $user,
-            sprintf('artist:"%s"', $artist['name']),
+            sprintf('artist:"%s"', $sanitizedArtistName),
             0,
             'track'
         );
@@ -89,9 +111,7 @@ class SpotifyCatalogService
 
     public function normalizeTrack(array $rawTrack, ?array $fallbackAlbum = null): array
     {
-        $artists = $rawTrack['artists'] ?? [];
-        $primaryArtist = $artists[0] ?? [];
-        $artistNames = implode(', ', array_filter(array_map(fn ($a) => $a['name'] ?? '', $artists)));
+        [$artistNames, $primaryArtistId] = $this->extractArtistSummary($rawTrack['artists'] ?? []);
         $album = $rawTrack['album'] ?? $fallbackAlbum ?? [];
         $spotifyTrackId = (string) ($rawTrack['id'] ?? '');
 
@@ -99,8 +119,8 @@ class SpotifyCatalogService
             'spotify_track_id' => $spotifyTrackId,
             'spotify_track_uri' => (string) ($rawTrack['uri'] ?? ('spotify:track:' . $spotifyTrackId)),
             'title' => (string) ($rawTrack['name'] ?? 'Faixa sem título'),
-            'artist_name' => $artistNames !== '' ? $artistNames : 'Artista desconhecido',
-            'spotify_artist_id' => isset($primaryArtist['id']) ? (string) $primaryArtist['id'] : null,
+            'artist_name' => $artistNames,
+            'spotify_artist_id' => $primaryArtistId,
             'album_name' => (string) ($album['name'] ?? 'Álbum desconhecido'),
             'spotify_album_id' => isset($album['id']) ? (string) $album['id'] : null,
             'album_cover_url' => $album['images'][0]['url'] ?? null,
@@ -114,23 +134,35 @@ class SpotifyCatalogService
             'spotify_artist_id' => (string) ($rawArtist['id'] ?? ''),
             'name' => (string) ($rawArtist['name'] ?? 'Artista'),
             'image_url' => $rawArtist['images'][0]['url'] ?? null,
-            'genres' => array_slice($rawArtist['genres'] ?? [], 0, 4),
         ];
     }
 
     public function normalizeAlbum(array $rawAlbum): array
     {
-        $artists = $rawAlbum['artists'] ?? [];
-        $primaryArtist = $artists[0] ?? [];
-        $artistNames = implode(', ', array_filter(array_map(fn ($a) => $a['name'] ?? '', $artists)));
+        [$artistNames, $primaryArtistId] = $this->extractArtistSummary($rawAlbum['artists'] ?? []);
 
         return [
             'spotify_album_id' => (string) ($rawAlbum['id'] ?? ''),
             'name' => (string) ($rawAlbum['name'] ?? 'Álbum'),
-            'artist_name' => $artistNames !== '' ? $artistNames : 'Artista desconhecido',
-            'spotify_artist_id' => isset($primaryArtist['id']) ? (string) $primaryArtist['id'] : null,
+            'artist_name' => $artistNames,
+            'spotify_artist_id' => $primaryArtistId,
             'cover_url' => $rawAlbum['images'][0]['url'] ?? null,
             'release_year' => isset($rawAlbum['release_date']) ? substr((string) $rawAlbum['release_date'], 0, 4) : null,
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $artists
+     * @return array{0: string, 1: ?string}
+     */
+    private function extractArtistSummary(array $artists): array
+    {
+        $primaryArtist = $artists[0] ?? [];
+        $names = implode(', ', array_filter(array_map(fn ($a) => $a['name'] ?? '', $artists)));
+
+        return [
+            $names !== '' ? $names : 'Artista desconhecido',
+            isset($primaryArtist['id']) ? (string) $primaryArtist['id'] : null,
         ];
     }
 

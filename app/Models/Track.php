@@ -60,3 +60,4 @@ class Track extends Model
         return $persisted;
     }
 }
+

@@ -73,14 +73,27 @@ class SpotifyPlayerService
             return null;
         }
 
-        $persistedTracks = \App\Models\Track::upsertManyFromCatalog($normalizedTracks);
-        $uris = array_values(array_map(fn ($t) => $t->spotify_track_uri, $persistedTracks));
-        $safeOffset = max(0, min($offset, max(0, count($persistedTracks) - 1)));
+        $persistedByOriginalIndex = \App\Models\Track::upsertManyFromCatalog($normalizedTracks);
+        if (empty($persistedByOriginalIndex)) {
+            return null;
+        }
+
+        $orderedTracks = [];
+        $resolvedOffset = 0;
+
+        foreach ($persistedByOriginalIndex as $originalIndex => $track) {
+            if ($originalIndex === $offset) {
+                $resolvedOffset = count($orderedTracks);
+            }
+            $orderedTracks[] = $track;
+        }
+
+        $uris = array_map(fn ($t) => $t->spotify_track_uri, $orderedTracks);
         $preference = $user->getOrCreatePreferences();
 
-        $this->playContext($user, $uris, $safeOffset, $preference->preferred_device_id);
+        $this->playContext($user, $uris, $resolvedOffset, $preference->preferred_device_id);
 
-        return $persistedTracks[$safeOffset] ?? null;
+        return $orderedTracks[$resolvedOffset] ?? null;
     }
 
     public function pause(User $user, ?string $deviceId = null): void

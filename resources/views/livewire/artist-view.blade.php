@@ -16,13 +16,6 @@
             <div class="space-y-2 min-w-0">
                 <p class="text-xs font-semibold uppercase tracking-widest text-emerald-400">Artista</p>
                 <h1 class="text-3xl font-extrabold text-white truncate">{{ $artist['name'] }}</h1>
-                @if (! empty($artist['genres']))
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        @foreach ($artist['genres'] as $genre)
-                            <span class="rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300">{{ $genre }}</span>
-                        @endforeach
-                    </div>
-                @endif
             </div>
         </div>
     @endif
@@ -84,3 +77,4 @@
         </div>
     @endif
 </section>
+

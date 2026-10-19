@@ -3,14 +3,16 @@
 namespace App\Http\Livewire;
 
 use App\Exceptions\SpotifyApiException;
+use App\Http\Livewire\Concerns\PlaysNormalizedTrackLists;
 use App\Services\Spotify\SpotifyCatalogService;
-use App\Services\Spotify\SpotifyPlayerService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class AlbumView extends Component
 {
+    use PlaysNormalizedTrackLists;
+
     public string $albumId = '';
     public array $album = [];
     public array $tracks = [];
@@ -20,35 +22,6 @@ class AlbumView extends Component
     {
         $this->albumId = $albumId;
         $this->loadAlbum($catalogService);
-    }
-
-    public function playTrackAtIndex(int $index, SpotifyPlayerService $playerService): void
-    {
-        if (! isset($this->tracks[$index])) {
-            return;
-        }
-
-        $this->errorMessage = null;
-
-        try {
-            $selectedTrack = $playerService->playNormalizedTrackList(Auth::user(), $this->tracks, $index);
-
-            if ($selectedTrack) {
-                $this->dispatchBrowserEvent('spotify:context-started', [
-                    'track' => [
-                        'uri' => $selectedTrack->spotify_track_uri,
-                        'title' => $selectedTrack->title,
-                        'artistName' => $selectedTrack->artist_name,
-                        'albumName' => $selectedTrack->album_name,
-                        'albumCoverUrl' => $selectedTrack->album_cover_url,
-                    ],
-                    'durationMs' => $selectedTrack->duration_ms,
-                    'offset' => $index,
-                ]);
-            }
-        } catch (SpotifyApiException $exception) {
-            $this->errorMessage = $exception->getMessage();
-        }
     }
 
     private function loadAlbum(SpotifyCatalogService $catalogService): void

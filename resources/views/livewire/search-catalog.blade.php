@@ -87,6 +87,18 @@
                     </button>
                 @endforeach
             </div>
+
+            @if (count($artists) < $artistsTotal)
+                <div class="pt-2">
+                    <button
+                        type="button"
+                        wire:click="loadMoreArtists"
+                        class="rounded-full border border-zinc-700 hover:border-zinc-500 text-xs font-medium text-zinc-200 px-5 py-2 transition"
+                    >
+                        Carregar mais Artistas
+                    </button>
+                </div>
+            @endif
         </div>
     @endif
 
@@ -110,6 +122,18 @@
                     </button>
                 @endforeach
             </div>
+
+            @if (count($albums) < $albumsTotal)
+                <div class="pt-2">
+                    <button
+                        type="button"
+                        wire:click="loadMoreAlbums"
+                        class="rounded-full border border-zinc-700 hover:border-zinc-500 text-xs font-medium text-zinc-200 px-5 py-2 transition"
+                    >
+                        Carregar mais Álbuns
+                    </button>
+                </div>
+            @endif
         </div>
     @endif
 </section>

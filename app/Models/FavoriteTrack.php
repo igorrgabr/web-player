@@ -55,6 +55,15 @@ class FavoriteTrack extends Model
         return true;
     }
 
+    public static function favoritedSpotifyTrackIdsForUser(User $user): array
+    {
+        return static::where('user_id', $user->id)
+            ->join('tracks', 'tracks.id', '=', 'favorite_tracks.track_id')
+            ->pluck('tracks.spotify_track_id')
+            ->values()
+            ->all();
+    }
+
     public static function isFavoritedByUser(User $user, ?string $spotifyTrackId = null, ?string $spotifyTrackUri = null): bool
     {
         return static::where('user_id', $user->id)
@@ -70,3 +79,4 @@ class FavoriteTrack extends Model
             ->exists();
     }
 }
+

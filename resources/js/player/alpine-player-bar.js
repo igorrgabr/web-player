@@ -85,6 +85,7 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
 
             this.sdkManager.init(this.volume);
             this.startProgressLoop();
+            this.refreshCurrentTrackFavoriteStatus();
 
             registerMediaSessionHandlers({
                 onPlay: () => {

@@ -20,11 +20,7 @@ trait PlaysNormalizedTrackLists
             return;
         }
 
-        $this->favoritedTrackIds = FavoriteTrack::where('user_id', $user->id)
-            ->join('tracks', 'tracks.id', '=', 'favorite_tracks.track_id')
-            ->pluck('tracks.spotify_track_id')
-            ->values()
-            ->all();
+        $this->favoritedTrackIds = FavoriteTrack::favoritedSpotifyTrackIdsForUser($user);
     }
 
     public function toggleFavoriteAtIndex(int $index): void

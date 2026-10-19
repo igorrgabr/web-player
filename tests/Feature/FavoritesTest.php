@@ -99,18 +99,19 @@ class FavoritesTest extends TestCase
             ->assertOk()
             ->assertJson(['favorited' => true]);
 
-        // Unfavoriting from the player bar endpoint removes it for Listener A
+        // Unfavoriting from the player bar endpoint with only URI/ID preserves existing track metadata in DB
         $this->actingAs($listenerA)
             ->postJson(route('player.favorites.toggle'), [
-                'spotify_track_id' => 'track-fav-1',
                 'spotify_track_uri' => 'spotify:track:track-fav-1',
-                'title' => 'Digital Love',
-                'artist_name' => 'Daft Punk',
-                'album_name' => 'Discovery',
-                'duration_ms' => 301000,
             ])
             ->assertOk()
             ->assertJson(['favorited' => false]);
+
+        $this->assertDatabaseHas('tracks', [
+            'spotify_track_id' => 'track-fav-1',
+            'title' => 'Digital Love',
+            'artist_name' => 'Daft Punk',
+        ]);
 
         $this->assertDatabaseMissing('favorite_tracks', [
             'user_id' => $listenerA->id,
@@ -178,6 +179,21 @@ class FavoritesTest extends TestCase
 
         // Rendering the library must NOT call any Spotify API endpoint
         Http::assertNothingSent();
+
+        // Playing from the top button (offset=0) sends the entire reverse-chronological favorites list starting at 0
+        $component->call('playTrackAtIndex', 0)
+            ->assertDispatchedBrowserEvent('spotify:context-started');
+
+        Http::assertSent(function (\Illuminate\Http\Client\Request $request) {
+            if ($request->method() !== 'PUT' || ! str_contains($request->url(), '/v1/me/player/play')) {
+                return false;
+            }
+
+            $data = $request->data();
+
+            return ($data['uris'] ?? []) === ['spotify:track:track-newer', 'spotify:track:track-older']
+                && ($data['offset']['position'] ?? null) === 0;
+        });
 
         // Playing from index 1 ('Older Song') sends the entire reverse-chronological favorites list with offset=1
         $component->call('playTrackAtIndex', 1)

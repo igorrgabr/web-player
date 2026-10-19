@@ -50,18 +50,9 @@ class FavoritesLibrary extends Component
                     return null;
                 }
 
-                return [
-                    'spotify_track_id' => $track->spotify_track_id,
-                    'spotify_track_uri' => $track->spotify_track_uri,
-                    'title' => $track->title,
-                    'artist_name' => $track->artist_name,
-                    'spotify_artist_id' => $track->spotify_artist_id,
-                    'album_name' => $track->album_name,
-                    'spotify_album_id' => $track->spotify_album_id,
-                    'album_cover_url' => $track->album_cover_url,
-                    'duration_ms' => (int) $track->duration_ms,
+                return array_merge($track->toNormalizedArray(), [
                     'favorited_at' => optional($fav->favorited_at)->format('d/m/Y H:i'),
-                ];
+                ]);
             })
             ->filter()
             ->values()
@@ -75,3 +66,4 @@ class FavoritesLibrary extends Component
         return view('livewire.favorites-library');
     }
 }
+

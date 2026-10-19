@@ -71,3 +71,4 @@ class AppShellTest extends TestCase
             ->assertSet('activeView', 'home');
     }
 }
+

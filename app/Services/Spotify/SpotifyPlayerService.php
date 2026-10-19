@@ -35,7 +35,6 @@ class SpotifyPlayerService
 
     public function playContext(User $user, array $uris, int $offset = 0, ?string $deviceId = null): ?string
     {
-        $query = $deviceId ? ['device_id' => $deviceId] : [];
         $safeOffset = max(0, min($offset, max(0, count($uris) - 1)));
 
         $payload = [];
@@ -48,16 +47,17 @@ class SpotifyPlayerService
             $user,
             'PUT',
             '/me/player/play',
-            $query,
+            $this->withDeviceQuery($deviceId),
             empty($payload) ? null : $payload
         );
 
         $currentUri = $uris[$safeOffset] ?? null;
 
         if ($currentUri !== null) {
-            $user->getOrCreatePreferences()->update([
+            $preference = $user->getOrCreatePreferences();
+            $preference->update([
                 'last_played_track_uri' => $currentUri,
-                'preferred_device_id' => $deviceId ?? $user->getOrCreatePreferences()->preferred_device_id,
+                'preferred_device_id' => $deviceId ?? $preference->preferred_device_id,
             ]);
         }
 
@@ -66,42 +66,27 @@ class SpotifyPlayerService
 
     public function pause(User $user, ?string $deviceId = null): void
     {
-        $this->client->request(
-            $user,
-            'PUT',
-            '/me/player/pause',
-            $deviceId ? ['device_id' => $deviceId] : []
-        );
+        $this->client->request($user, 'PUT', '/me/player/pause', $this->withDeviceQuery($deviceId));
     }
 
     public function next(User $user, ?string $deviceId = null): void
     {
-        $this->client->request(
-            $user,
-            'POST',
-            '/me/player/next',
-            $deviceId ? ['device_id' => $deviceId] : []
-        );
+        $this->client->request($user, 'POST', '/me/player/next', $this->withDeviceQuery($deviceId));
     }
 
     public function previous(User $user, ?string $deviceId = null): void
     {
-        $this->client->request(
-            $user,
-            'POST',
-            '/me/player/previous',
-            $deviceId ? ['device_id' => $deviceId] : []
-        );
+        $this->client->request($user, 'POST', '/me/player/previous', $this->withDeviceQuery($deviceId));
     }
 
     public function seek(User $user, int $positionMs, ?string $deviceId = null): void
     {
-        $query = ['position_ms' => max(0, $positionMs)];
-        if ($deviceId) {
-            $query['device_id'] = $deviceId;
-        }
-
-        $this->client->request($user, 'PUT', '/me/player/seek', $query);
+        $this->client->request(
+            $user,
+            'PUT',
+            '/me/player/seek',
+            $this->withDeviceQuery($deviceId, ['position_ms' => max(0, $positionMs)])
+        );
     }
 
     public function updatePreferences(User $user, array $attributes, ?string $deviceId = null): UserPreference
@@ -112,34 +97,34 @@ class SpotifyPlayerService
         if (array_key_exists('default_volume', $attributes) && $attributes['default_volume'] !== null) {
             $volume = (int) $attributes['default_volume'];
             $updates['default_volume'] = $volume;
-
-            $query = ['volume_percent' => $volume];
-            if ($deviceId) {
-                $query['device_id'] = $deviceId;
-            }
-            $this->client->request($user, 'PUT', '/me/player/volume', $query);
+            $this->client->request(
+                $user,
+                'PUT',
+                '/me/player/volume',
+                $this->withDeviceQuery($deviceId, ['volume_percent' => $volume])
+            );
         }
 
         if (array_key_exists('repeat_mode', $attributes) && $attributes['repeat_mode'] !== null) {
             $repeatMode = (string) $attributes['repeat_mode'];
             $updates['repeat_mode'] = $repeatMode;
-
-            $query = ['state' => $repeatMode];
-            if ($deviceId) {
-                $query['device_id'] = $deviceId;
-            }
-            $this->client->request($user, 'PUT', '/me/player/repeat', $query);
+            $this->client->request(
+                $user,
+                'PUT',
+                '/me/player/repeat',
+                $this->withDeviceQuery($deviceId, ['state' => $repeatMode])
+            );
         }
 
         if (array_key_exists('shuffle_enabled', $attributes) && $attributes['shuffle_enabled'] !== null) {
             $shuffle = (bool) $attributes['shuffle_enabled'];
             $updates['shuffle_enabled'] = $shuffle;
-
-            $query = ['state' => $shuffle ? 'true' : 'false'];
-            if ($deviceId) {
-                $query['device_id'] = $deviceId;
-            }
-            $this->client->request($user, 'PUT', '/me/player/shuffle', $query);
+            $this->client->request(
+                $user,
+                'PUT',
+                '/me/player/shuffle',
+                $this->withDeviceQuery($deviceId, ['state' => $shuffle ? 'true' : 'false'])
+            );
         }
 
         if ($deviceId) {
@@ -151,5 +136,14 @@ class SpotifyPlayerService
         }
 
         return $preference->fresh();
+    }
+
+    private function withDeviceQuery(?string $deviceId, array $query = []): array
+    {
+        if ($deviceId !== null && $deviceId !== '') {
+            $query['device_id'] = $deviceId;
+        }
+
+        return $query;
     }
 }

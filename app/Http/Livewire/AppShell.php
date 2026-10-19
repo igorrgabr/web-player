@@ -53,3 +53,4 @@ class AppShell extends Component
         return view('livewire.app-shell');
     }
 }
+

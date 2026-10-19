@@ -15,8 +15,8 @@ class CreateUserPreferencesTable extends Migration
             $table->string('repeat_mode', 16)->default('off');
             $table->boolean('shuffle_enabled')->default(false);
             $table->string('preferred_device_id', 128)->nullable();
+            $table->unsignedBigInteger('last_played_track_id')->nullable()->index();
             $table->string('last_played_track_uri', 128)->nullable();
-            $table->json('extra_settings')->nullable();
             $table->timestamps();
         });
     }

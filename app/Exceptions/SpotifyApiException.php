@@ -26,3 +26,4 @@ class SpotifyApiException extends RuntimeException
         return $this->retryAfterSeconds;
     }
 }
+

@@ -11,8 +11,18 @@
         lastPlayedTrackUri: @js($preferences->last_played_track_uri),
     })"
     x-init="initPlayer()"
-    class="h-24 bg-zinc-900 border-t border-zinc-800 px-6 flex items-center justify-between gap-4 shrink-0 select-none"
+    class="h-24 bg-zinc-900 border-t border-zinc-800 px-6 flex items-center justify-between gap-4 shrink-0 select-none relative"
 >
+    <template x-if="errorMessage">
+        <div
+            role="alert"
+            class="absolute -top-10 left-1/2 -translate-x-1/2 bg-red-950/95 border border-red-800 text-red-200 text-xs px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2 z-50"
+        >
+            <span x-text="errorMessage"></span>
+            <button type="button" @click="errorMessage = null" class="text-red-400 hover:text-white font-bold">×</button>
+        </div>
+    </template>
+
     <!-- Faixa Atual -->
     <div class="w-1/4 min-w-[180px] flex items-center gap-3">
         <template x-if="currentTrack.albumCoverUrl">

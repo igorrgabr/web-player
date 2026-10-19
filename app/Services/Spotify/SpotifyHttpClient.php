@@ -74,3 +74,4 @@ class SpotifyHttpClient
         return $pending->send($upperMethod, $url, $body ? ['json' => $body] : []);
     }
 }
+

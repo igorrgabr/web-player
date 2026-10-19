@@ -11,6 +11,7 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
         showDevicesMenu: false,
         statusLabel: 'Inicializando Reprodutor Web...',
         errorMessage: null,
+        hasActiveSession: false,
 
         isPaused: true,
         positionMs: 0,
@@ -31,21 +32,35 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
             albumCoverUrl: null,
         },
 
+        canUseLocalSdk() {
+            return Boolean(this.playbackMode === 'sdk' && this.sdkReady && this.sdkManager?.player);
+        },
+
         initPlayer() {
+            if (window.Alpine && typeof window.Alpine.store === 'function') {
+                window.Alpine.store('player', this);
+            }
+
             this.sdkManager = new SpotifySdkManager({
                 onReady: async (deviceId) => {
                     this.sdkReady = true;
-                    this.playbackMode = 'sdk';
-                    this.activeDeviceId = deviceId;
-                    this.statusLabel = 'Reprodutor Web Ativo';
 
-                    try {
-                        await apiRequest('/player/transfer', 'POST', {
-                            device_id: deviceId,
-                            play: false,
-                        });
-                    } catch (_e) {
-                        // A transferência inicial é silenciosa caso nenhuma sessão esteja ativa
+                    if (!this.activeDeviceId || this.activeDeviceId === deviceId) {
+                        this.playbackMode = 'sdk';
+                        this.activeDeviceId = deviceId;
+                        this.statusLabel = 'Reprodutor Web Ativo';
+
+                        try {
+                            await apiRequest('/player/transfer', 'POST', {
+                                device_id: deviceId,
+                                play: false,
+                            });
+                        } catch (_e) {
+                            // Transferência inicial silenciosa
+                        }
+                    } else {
+                        this.playbackMode = 'connect';
+                        this.statusLabel = 'Dispositivo Connect Preferido';
                     }
                 },
                 onNotReady: () => {
@@ -70,8 +85,16 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
             this.startProgressLoop();
 
             registerMediaSessionHandlers({
-                onPlay: () => this.togglePlay(),
-                onPause: () => this.togglePlay(),
+                onPlay: () => {
+                    if (this.isPaused) {
+                        this.togglePlay();
+                    }
+                },
+                onPause: () => {
+                    if (!this.isPaused) {
+                        this.togglePlay();
+                    }
+                },
                 onPrevious: () => this.previousTrack(),
                 onNext: () => this.nextTrack(),
                 onSeek: (posMs) => this.commitSeek(posMs),
@@ -84,17 +107,12 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
         },
 
         applySdkState(state) {
+            this.hasActiveSession = true;
             this.isPaused = Boolean(state.paused);
             this.durationMs = Number(state.duration || 0);
 
             if (!this.isDraggingSeek) {
                 this.positionMs = Number(state.position || 0);
-            }
-
-            this.shuffleEnabled = Boolean(state.shuffle);
-            const repeatStates = ['off', 'context', 'track'];
-            if (typeof state.repeat_mode === 'number' && repeatStates[state.repeat_mode]) {
-                this.repeatMode = repeatStates[state.repeat_mode];
             }
 
             const track = state.track_window?.current_track;
@@ -155,6 +173,7 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
 
         async playContext(uris = [], offset = 0) {
             this.sdkManager?.activateAudioElement();
+            this.errorMessage = null;
 
             try {
                 await apiRequest('/player/play', 'POST', {
@@ -162,6 +181,7 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
                     uris,
                     offset,
                 });
+                this.hasActiveSession = true;
                 this.isPaused = false;
             } catch (error) {
                 this.errorMessage = error.message;
@@ -170,18 +190,22 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
 
         async togglePlay() {
             this.sdkManager?.activateAudioElement();
+            this.errorMessage = null;
 
-            if (this.playbackMode === 'sdk' && this.sdkReady && this.sdkManager?.player) {
+            if (this.canUseLocalSdk() && this.hasActiveSession) {
                 await this.sdkManager.player.togglePlay();
                 return;
             }
 
             try {
                 if (this.isPaused) {
-                    await apiRequest('/player/play', 'POST', {
-                        device_id: this.activeDeviceId,
-                        ...(this.currentTrack.uri ? { uris: [this.currentTrack.uri], offset: 0 } : {}),
-                    });
+                    const payload = { device_id: this.activeDeviceId };
+                    if (!this.hasActiveSession && this.currentTrack.uri) {
+                        payload.uris = [this.currentTrack.uri];
+                        payload.offset = 0;
+                    }
+                    await apiRequest('/player/play', 'POST', payload);
+                    this.hasActiveSession = true;
                     this.isPaused = false;
                 } else {
                     await apiRequest('/player/pause', 'POST', {
@@ -195,7 +219,7 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
         },
 
         async nextTrack() {
-            if (this.playbackMode === 'sdk' && this.sdkReady && this.sdkManager?.player) {
+            if (this.canUseLocalSdk()) {
                 await this.sdkManager.player.nextTrack();
                 return;
             }
@@ -208,7 +232,7 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
         },
 
         async previousTrack() {
-            if (this.playbackMode === 'sdk' && this.sdkReady && this.sdkManager?.player) {
+            if (this.canUseLocalSdk()) {
                 await this.sdkManager.player.previousTrack();
                 return;
             }
@@ -234,7 +258,7 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
             this.positionMs = targetMs;
             this.isDraggingSeek = false;
 
-            if (this.playbackMode === 'sdk' && this.sdkReady && this.sdkManager?.player) {
+            if (this.canUseLocalSdk()) {
                 await this.sdkManager.player.seek(targetMs);
                 return;
             }
@@ -253,7 +277,7 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
             const vol = Math.max(0, Math.min(100, Number(value || 0)));
             this.volume = vol;
 
-            if (this.playbackMode === 'sdk' && this.sdkReady && this.sdkManager?.player) {
+            if (this.canUseLocalSdk()) {
                 this.sdkManager.player.setVolume(vol / 100);
             }
         },

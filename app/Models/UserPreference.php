@@ -18,14 +18,14 @@ class UserPreference extends Model
         'repeat_mode',
         'shuffle_enabled',
         'preferred_device_id',
+        'last_played_track_id',
         'last_played_track_uri',
-        'extra_settings',
     ];
 
     protected $casts = [
         'default_volume' => 'integer',
         'shuffle_enabled' => 'boolean',
-        'extra_settings' => 'array',
+        'last_played_track_id' => 'integer',
     ];
 
     public function user(): BelongsTo

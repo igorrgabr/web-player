@@ -25,11 +25,13 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
         shuffleEnabled: Boolean(initialConfig.shuffleEnabled),
 
         currentTrack: {
+            id: null,
             uri: initialConfig.lastPlayedTrackUri || null,
             title: null,
             artistName: null,
             albumName: null,
             albumCoverUrl: null,
+            favorited: false,
         },
 
         canUseLocalSdk() {
@@ -117,13 +119,25 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
 
                 if (detail.track) {
                     this.currentTrack = {
+                        id: detail.track.id || null,
                         uri: detail.track.uri || null,
                         title: detail.track.title || null,
                         artistName: detail.track.artistName || null,
                         albumName: detail.track.albumName || null,
                         albumCoverUrl: detail.track.albumCoverUrl || null,
+                        favorited: Boolean(detail.track.favorited),
                     };
                     syncMediaSessionMetadata(this.currentTrack, false);
+                }
+            });
+
+            window.addEventListener('spotify:favorite-updated', (event) => {
+                const detail = event.detail || {};
+                if (
+                    (detail.spotifyTrackUri && detail.spotifyTrackUri === this.currentTrack.uri) ||
+                    (detail.spotifyTrackId && detail.spotifyTrackId === this.currentTrack.id)
+                ) {
+                    this.currentTrack.favorited = Boolean(detail.favorited);
                 }
             });
         },
@@ -139,16 +153,63 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
 
             const track = state.track_window?.current_track;
             if (track) {
+                const previousUri = this.currentTrack.uri;
                 this.currentTrack = {
+                    id: track.id || null,
                     uri: track.uri,
                     title: track.name,
                     artistName: (track.artists || []).map((a) => a.name).join(', '),
                     albumName: track.album?.name || '',
                     albumCoverUrl: track.album?.images?.[0]?.url || null,
+                    favorited: previousUri === track.uri ? this.currentTrack.favorited : false,
                 };
+
+                if (previousUri !== track.uri) {
+                    this.refreshCurrentTrackFavoriteStatus();
+                }
             }
 
             syncMediaSessionMetadata(this.currentTrack, this.isPaused);
+        },
+
+        async refreshCurrentTrackFavoriteStatus() {
+            if (!this.currentTrack.uri) {
+                return;
+            }
+
+            try {
+                const query = new URLSearchParams({ uri: this.currentTrack.uri });
+                const data = await apiRequest(`/player/favorites/status?${query.toString()}`, 'GET');
+                this.currentTrack.favorited = Boolean(data.favorited);
+            } catch (_e) {
+                // Silencioso
+            }
+        },
+
+        async toggleCurrentTrackFavorite() {
+            if (!this.currentTrack.uri) {
+                return;
+            }
+
+            try {
+                const data = await apiRequest('/player/favorites/toggle', 'POST', {
+                    spotify_track_id: this.currentTrack.id,
+                    spotify_track_uri: this.currentTrack.uri,
+                    title: this.currentTrack.title,
+                    artist_name: this.currentTrack.artistName,
+                    album_name: this.currentTrack.albumName,
+                    album_cover_url: this.currentTrack.albumCoverUrl,
+                    duration_ms: this.durationMs || 1000,
+                });
+
+                this.currentTrack.favorited = Boolean(data.favorited);
+
+                if (window.Livewire && typeof window.Livewire.emit === 'function') {
+                    window.Livewire.emit('refreshFavoritesState');
+                }
+            } catch (error) {
+                this.errorMessage = error.message;
+            }
         },
 
         startProgressLoop() {

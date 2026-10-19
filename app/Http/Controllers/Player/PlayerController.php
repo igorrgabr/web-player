@@ -164,4 +164,57 @@ class PlayerController extends Controller
             'preferred_device_id' => $preference->preferred_device_id,
         ]);
     }
+
+    public function favoriteStatus(Request $request): JsonResponse
+    {
+        $trackId = $request->query('track_id');
+        $uri = $request->query('uri');
+
+        $favorited = \App\Models\FavoriteTrack::isFavoritedByUser(
+            $request->user(),
+            is_string($trackId) ? $trackId : null,
+            is_string($uri) ? $uri : null
+        );
+
+        return response()->json([
+            'favorited' => $favorited,
+        ]);
+    }
+
+    public function toggleFavorite(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'spotify_track_id' => ['nullable', 'string', 'max:128'],
+            'spotify_track_uri' => ['nullable', 'string', 'max:255'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'artist_name' => ['nullable', 'string', 'max:255'],
+            'spotify_artist_id' => ['nullable', 'string', 'max:128'],
+            'album_name' => ['nullable', 'string', 'max:255'],
+            'spotify_album_id' => ['nullable', 'string', 'max:128'],
+            'album_cover_url' => ['nullable', 'string', 'max:1024'],
+            'duration_ms' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $spotifyTrackId = (string) ($validated['spotify_track_id'] ?? '');
+        $spotifyTrackUri = (string) ($validated['spotify_track_uri'] ?? '');
+
+        if ($spotifyTrackId === '' && str_starts_with($spotifyTrackUri, 'spotify:track:')) {
+            $spotifyTrackId = substr($spotifyTrackUri, strlen('spotify:track:'));
+        }
+
+        if ($spotifyTrackId === '') {
+            return response()->json(['message' => 'Identificador da Faixa inválido.'], 422);
+        }
+
+        $validated['spotify_track_id'] = $spotifyTrackId;
+        $validated['spotify_track_uri'] = $spotifyTrackUri !== '' ? $spotifyTrackUri : ('spotify:track:' . $spotifyTrackId);
+
+        $favorited = \App\Models\FavoriteTrack::toggleForUser($request->user(), $validated);
+
+        return response()->json([
+            'favorited' => $favorited,
+            'spotify_track_id' => $spotifyTrackId,
+            'spotify_track_uri' => $validated['spotify_track_uri'],
+        ]);
+    }
 }

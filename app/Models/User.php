@@ -52,6 +52,11 @@ class User extends Authenticatable
         return $this->hasOne(UserPreference::class);
     }
 
+    public function favoriteTracks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(FavoriteTrack::class)->orderByDesc('favorited_at')->orderByDesc('id');
+    }
+
     public function getOrCreatePreferences(): UserPreference
     {
         return $this->preference()->firstOrCreate(

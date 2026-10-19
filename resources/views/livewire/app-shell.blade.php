@@ -60,10 +60,7 @@
         @elseif ($activeView === 'search')
             @livewire('search-catalog')
         @elseif ($activeView === 'favorites')
-            <section>
-                <h1 class="text-2xl font-bold text-white mb-2">Faixas Favoritas</h1>
-                <p class="text-sm text-zinc-400">Sua coleção pessoal de Faixas curtidas.</p>
-            </section>
+            @livewire('favorites-library')
         @elseif ($activeView === 'playlist')
             <section>
                 <h1 class="text-2xl font-bold text-white mb-2">Playlist Local #{{ $contextId }}</h1>

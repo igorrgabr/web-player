@@ -19,9 +19,14 @@ class ArtistView extends Component
     public array $albums = [];
     public ?string $errorMessage = null;
 
+    protected $listeners = [
+        'refreshFavoritesState' => 'syncFavoritedTrackIds',
+    ];
+
     public function mount(string $artistId, SpotifyCatalogService $catalogService): void
     {
         $this->artistId = $artistId;
+        $this->syncFavoritedTrackIds();
         $this->loadArtist($catalogService);
     }
 

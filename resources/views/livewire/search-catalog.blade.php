@@ -46,9 +46,20 @@
                             </div>
                         </div>
 
-                        <span class="text-xs font-mono text-zinc-400 shrink-0">
-                            {{ \App\Services\Spotify\SpotifyCatalogService::formatDuration($track['duration_ms']) }}
-                        </span>
+                        <div class="flex items-center gap-4 shrink-0">
+                            @php($isFav = in_array($track['spotify_track_id'], $favoritedTrackIds ?? [], true))
+                            <button
+                                type="button"
+                                wire:click="toggleFavoriteAtIndex({{ $index }})"
+                                class="text-base transition {{ $isFav ? 'text-emerald-400' : 'text-zinc-500 hover:text-white' }}"
+                                title="{{ $isFav ? 'Remover das Faixas Favoritas' : 'Adicionar às Faixas Favoritas' }}"
+                            >
+                                {{ $isFav ? '♥' : '♡' }}
+                            </button>
+                            <span class="text-xs font-mono text-zinc-400">
+                                {{ \App\Services\Spotify\SpotifyCatalogService::formatDuration($track['duration_ms']) }}
+                            </span>
+                        </div>
                     </div>
                 @endforeach
             </div>

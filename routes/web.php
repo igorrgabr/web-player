@@ -48,5 +48,11 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/player/preferences', [PlayerController::class, 'preferences'])
             ->name('player.preferences');
+
+        Route::get('/player/favorites/status', [PlayerController::class, 'favoriteStatus'])
+            ->name('player.favorites.status');
+
+        Route::post('/player/favorites/toggle', [PlayerController::class, 'toggleFavorite'])
+            ->name('player.favorites.toggle');
     });
 });

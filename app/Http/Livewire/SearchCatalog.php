@@ -29,8 +29,14 @@ class SearchCatalog extends Component
         'query' => ['except' => '', 'as' => 'q'],
     ];
 
+    protected $listeners = [
+        'refreshFavoritesState' => 'syncFavoritedTrackIds',
+    ];
+
     public function mount(SpotifyCatalogService $catalogService): void
     {
+        $this->syncFavoritedTrackIds();
+
         if (trim($this->query) !== '') {
             $this->performSearch($catalogService);
         }
@@ -58,6 +64,7 @@ class SearchCatalog extends Component
             $this->tracks = array_values(array_merge($this->tracks, $results['tracks']));
             $this->tracksTotal = $results['tracks_total'];
             $this->tracksOffset = $nextOffset;
+            $this->syncFavoritedTrackIds();
         } catch (SpotifyApiException $exception) {
             $this->errorMessage = $exception->getMessage();
         }
@@ -104,6 +111,7 @@ class SearchCatalog extends Component
     private function performSearch(SpotifyCatalogService $catalogService): void
     {
         $this->errorMessage = null;
+        $this->syncFavoritedTrackIds();
 
         if (trim($this->query) === '') {
             $this->tracks = [];

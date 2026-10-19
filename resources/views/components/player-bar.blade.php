@@ -37,6 +37,17 @@
             <p class="text-sm font-semibold text-white truncate" x-text="currentTrack.title || 'Nenhuma Faixa em reprodução'"></p>
             <p class="text-xs text-zinc-400 truncate" x-text="currentTrack.artistName || 'Selecione uma Faixa para iniciar'"></p>
         </div>
+        <template x-if="currentTrack.uri">
+            <button
+                type="button"
+                @click="toggleCurrentTrackFavorite()"
+                :class="currentTrack.favorited ? 'text-emerald-400' : 'text-zinc-500 hover:text-white'"
+                class="ml-1 text-base transition shrink-0"
+                :title="currentTrack.favorited ? 'Remover das Faixas Favoritas' : 'Adicionar às Faixas Favoritas'"
+            >
+                <span x-text="currentTrack.favorited ? '♥' : '♡'"></span>
+            </button>
+        </template>
     </div>
 
     <!-- Controles Centrais e Barra de Progresso -->

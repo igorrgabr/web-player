@@ -46,4 +46,21 @@ class User extends Authenticatable
     {
         return $this->hasOne(SpotifyAccount::class);
     }
+
+    public function preference(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserPreference::class);
+    }
+
+    public function getOrCreatePreferences(): UserPreference
+    {
+        return $this->preference()->firstOrCreate(
+            ['user_id' => $this->id],
+            [
+                'default_volume' => 80,
+                'repeat_mode' => 'off',
+                'shuffle_enabled' => false,
+            ]
+        );
+    }
 }

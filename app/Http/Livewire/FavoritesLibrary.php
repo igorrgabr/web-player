@@ -18,6 +18,7 @@ class FavoritesLibrary extends Component
 
     protected $listeners = [
         'refreshFavoritesState' => 'loadFavorites',
+        'playlistsUpdated' => 'loadFavorites',
     ];
 
     public function mount(): void
@@ -37,9 +38,12 @@ class FavoritesLibrary extends Component
         if (! $user) {
             $this->tracks = [];
             $this->favoritedTrackIds = [];
+            $this->userPlaylists = [];
 
             return;
         }
+
+        $this->syncFavoritedTrackIds();
 
         $favorites = $user->favoriteTracks()->with('track')->get();
 

@@ -20,6 +20,7 @@ class AlbumView extends Component
 
     protected $listeners = [
         'refreshFavoritesState' => 'syncFavoritedTrackIds',
+        'playlistsUpdated' => 'syncFavoritedTrackIds',
     ];
 
     public function mount(string $albumId, SpotifyCatalogService $catalogService): void

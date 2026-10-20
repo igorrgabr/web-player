@@ -1,6 +1,6 @@
 <div class="flex-1 flex overflow-hidden">
     <!-- Barra Lateral de Navegação -->
-    <aside class="w-64 bg-black border-r border-zinc-900 p-5 flex flex-col justify-between shrink-0">
+    <aside class="w-64 bg-black border-r border-zinc-900 p-5 flex flex-col justify-between shrink-0 overflow-y-auto">
         <div class="space-y-6">
             <div class="flex items-center gap-3 px-2">
                 <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-zinc-950 font-bold">
@@ -34,6 +34,73 @@
                     <span>Faixas Favoritas</span>
                 </button>
             </nav>
+
+            <!-- Seção de Playlists Locais -->
+            <div class="pt-4 border-t border-zinc-900 space-y-3">
+                <div class="flex items-center justify-between px-2">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Playlists Locais</span>
+                    <button
+                        type="button"
+                        wire:click="$toggle('showCreatePlaylistForm')"
+                        class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition"
+                        title="Nova Playlist Local"
+                    >
+                        + Criar
+                    </button>
+                </div>
+
+                @if ($showCreatePlaylistForm)
+                    <form wire:submit.prevent="createPlaylist" class="space-y-2 rounded-xl bg-zinc-900/90 border border-zinc-800 p-3">
+                        <input
+                            type="text"
+                            wire:model.defer="newPlaylistName"
+                            placeholder="Nome da Playlist Local"
+                            required
+                            maxlength="120"
+                            class="w-full rounded-lg bg-zinc-950 border border-zinc-700 px-2.5 py-1.5 text-xs text-white placeholder-zinc-500 focus:border-emerald-500 focus:outline-none"
+                        />
+                        @error('newPlaylistName')
+                            <p class="text-[11px] text-red-400">{{ $message }}</p>
+                        @enderror
+                        <input
+                            type="text"
+                            wire:model.defer="newPlaylistDescription"
+                            placeholder="Descrição (opcional)"
+                            maxlength="500"
+                            class="w-full rounded-lg bg-zinc-950 border border-zinc-700 px-2.5 py-1.5 text-xs text-white placeholder-zinc-500 focus:border-emerald-500 focus:outline-none"
+                        />
+                        <div class="flex items-center justify-end gap-2 pt-1">
+                            <button
+                                type="button"
+                                wire:click="$set('showCreatePlaylistForm', false)"
+                                class="text-xs text-zinc-400 hover:text-white px-2 py-1"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                class="rounded-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-xs px-3 py-1 transition"
+                            >
+                                Salvar
+                            </button>
+                        </div>
+                    </form>
+                @endif
+
+                <div class="space-y-1 max-h-56 overflow-y-auto">
+                    @forelse ($playlists as $pl)
+                        <button
+                            type="button"
+                            wire:click="navigateTo('playlist', '{{ $pl['id'] }}')"
+                            class="w-full text-left px-3 py-2 rounded-lg text-xs font-medium truncate transition {{ $activeView === 'playlist' && (string) $contextId === (string) $pl['id'] ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white hover:bg-zinc-900' }}"
+                        >
+                            {{ $pl['name'] }}
+                        </button>
+                    @empty
+                        <p class="px-2 text-xs text-zinc-600">Nenhuma Playlist Local criada.</p>
+                    @endforelse
+                </div>
+            </div>
         </div>
 
         <div class="pt-4 border-t border-zinc-900 flex items-center justify-between px-2">
@@ -62,9 +129,7 @@
         @elseif ($activeView === 'favorites')
             @livewire('favorites-library')
         @elseif ($activeView === 'playlist')
-            <section>
-                <h1 class="text-2xl font-bold text-white mb-2">Playlist Local #{{ $contextId }}</h1>
-            </section>
+            @livewire('playlist-view', ['playlistId' => (string) $contextId], key('playlist-' . $contextId))
         @elseif ($activeView === 'album')
             @livewire('album-view', ['albumId' => (string) $contextId], key('album-' . $contextId))
         @elseif ($activeView === 'artist')
@@ -72,4 +137,3 @@
         @endif
     </main>
 </div>
-

@@ -21,6 +21,7 @@ class ArtistView extends Component
 
     protected $listeners = [
         'refreshFavoritesState' => 'syncFavoritedTrackIds',
+        'playlistsUpdated' => 'syncFavoritedTrackIds',
     ];
 
     public function mount(string $artistId, SpotifyCatalogService $catalogService): void

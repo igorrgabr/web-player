@@ -1,6 +1,39 @@
-<div class="flex-1 flex overflow-hidden">
-    <!-- Barra Lateral de Navegação -->
-    <aside class="w-64 bg-black border-r border-zinc-900 p-5 flex flex-col justify-between shrink-0 overflow-y-auto">
+<div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+    <!-- Barra de Navegação Mobile -->
+    <header class="md:hidden bg-black border-b border-zinc-900 px-4 py-3 flex items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-zinc-950 font-bold text-xs">
+                W
+            </div>
+            <span class="font-bold text-sm text-white">Web Player</span>
+        </div>
+        <nav class="flex items-center gap-1" aria-label="Navegação Mobile">
+            <button
+                type="button"
+                wire:click="navigateTo('home')"
+                class="px-2.5 py-1.5 rounded-lg text-xs font-medium {{ $activeView === 'home' ? 'bg-zinc-800 text-white' : 'text-zinc-400' }}"
+            >
+                Início
+            </button>
+            <button
+                type="button"
+                wire:click="navigateTo('search')"
+                class="px-2.5 py-1.5 rounded-lg text-xs font-medium {{ $activeView === 'search' ? 'bg-zinc-800 text-white' : 'text-zinc-400' }}"
+            >
+                Buscar
+            </button>
+            <button
+                type="button"
+                wire:click="navigateTo('favorites')"
+                class="px-2.5 py-1.5 rounded-lg text-xs font-medium {{ $activeView === 'favorites' ? 'bg-zinc-800 text-white' : 'text-zinc-400' }}"
+            >
+                Favoritas
+            </button>
+        </nav>
+    </header>
+
+    <!-- Barra Lateral de Navegação (Desktop) -->
+    <aside class="hidden md:flex w-64 bg-black border-r border-zinc-900 p-5 flex-col justify-between shrink-0 overflow-y-auto">
         <div class="space-y-6">
             <div class="flex items-center gap-3 px-2">
                 <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-zinc-950 font-bold">
@@ -118,12 +151,9 @@
     </aside>
 
     <!-- Área Central Dinâmica -->
-    <main class="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-zinc-950 p-8">
+    <main class="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-zinc-950 p-4 sm:p-8">
         @if ($activeView === 'home')
-            <section>
-                <h1 class="text-2xl font-bold text-white mb-2">Início</h1>
-                <p class="text-sm text-zinc-400">Bem-vindo ao seu Web Player pessoal conectado ao Spotify Premium.</p>
-            </section>
+            @livewire('home-view')
         @elseif ($activeView === 'search')
             @livewire('search-catalog')
         @elseif ($activeView === 'favorites')

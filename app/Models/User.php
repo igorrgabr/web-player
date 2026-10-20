@@ -62,6 +62,11 @@ class User extends Authenticatable
         return $this->hasMany(LocalPlaylist::class)->orderBy('created_at')->orderBy('id');
     }
 
+    public function playHistories(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PlayHistory::class)->orderByDesc('played_at')->orderByDesc('id');
+    }
+
     public function getOrCreatePreferences(): UserPreference
     {
         return $this->preference()->firstOrCreate(

@@ -138,6 +138,11 @@ class SearchCatalog extends Component
         }
     }
 
+    protected function playbackContextType(): string
+    {
+        return 'search';
+    }
+
     public function render(): View
     {
         return view('livewire.search-catalog');

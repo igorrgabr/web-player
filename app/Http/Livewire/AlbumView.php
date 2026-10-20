@@ -47,6 +47,16 @@ class AlbumView extends Component
         }
     }
 
+    protected function playbackContextType(): string
+    {
+        return 'album';
+    }
+
+    protected function playbackContextUri(): ?string
+    {
+        return $this->albumId !== '' ? ('spotify:album:' . $this->albumId) : null;
+    }
+
     public function render(): View
     {
         return view('livewire.album-view');

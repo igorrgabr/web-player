@@ -167,6 +167,16 @@ class PlaylistView extends Component
             ->first();
     }
 
+    protected function playbackContextType(): string
+    {
+        return 'local_playlist';
+    }
+
+    protected function playbackContextUri(): ?string
+    {
+        return $this->playlistId !== '' ? ('local:playlist:' . $this->playlistId) : null;
+    }
+
     public function render(): View
     {
         return view('livewire.playlist-view');

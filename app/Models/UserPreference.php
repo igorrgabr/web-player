@@ -32,4 +32,9 @@ class UserPreference extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function lastPlayedTrack(): BelongsTo
+    {
+        return $this->belongsTo(Track::class, 'last_played_track_id');
+    }
 }

@@ -49,6 +49,16 @@ class ArtistView extends Component
         }
     }
 
+    protected function playbackContextType(): string
+    {
+        return 'artist';
+    }
+
+    protected function playbackContextUri(): ?string
+    {
+        return $this->artistId !== '' ? ('spotify:artist:' . $this->artistId) : null;
+    }
+
     public function render(): View
     {
         return view('livewire.artist-view');

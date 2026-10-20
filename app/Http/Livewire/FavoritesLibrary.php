@@ -65,6 +65,11 @@ class FavoritesLibrary extends Component
         $this->favoritedTrackIds = array_values(array_map(fn ($t) => $t['spotify_track_id'], $this->tracks));
     }
 
+    protected function playbackContextType(): string
+    {
+        return 'favorites';
+    }
+
     public function render(): View
     {
         return view('livewire.favorites-library');

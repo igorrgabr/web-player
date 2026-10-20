@@ -33,8 +33,14 @@ class SpotifyPlayerService
         ]);
     }
 
-    public function playContext(User $user, array $uris, int $offset = 0, ?string $deviceId = null): ?string
-    {
+    public function playContext(
+        User $user,
+        array $uris,
+        int $offset = 0,
+        ?string $deviceId = null,
+        ?string $contextType = null,
+        ?string $contextUri = null
+    ): ?string {
         $safeOffset = max(0, min($offset, max(0, count($uris) - 1)));
 
         $payload = [];
@@ -62,13 +68,27 @@ class SpotifyPlayerService
                 'last_played_track_uri' => $currentUri,
                 'preferred_device_id' => $deviceId ?? $preference->preferred_device_id,
             ]);
+
+            if ($matchedTrack) {
+                \App\Models\PlayHistory::recordForUser(
+                    $user,
+                    $matchedTrack,
+                    $contextType ?? 'context',
+                    $contextUri
+                );
+            }
         }
 
         return $currentUri;
     }
 
-    public function playNormalizedTrackList(User $user, array $normalizedTracks, int $offset = 0): ?\App\Models\Track
-    {
+    public function playNormalizedTrackList(
+        User $user,
+        array $normalizedTracks,
+        int $offset = 0,
+        ?string $contextType = null,
+        ?string $contextUri = null
+    ): ?\App\Models\Track {
         if (empty($normalizedTracks)) {
             return null;
         }
@@ -91,7 +111,14 @@ class SpotifyPlayerService
         $uris = array_map(fn ($t) => $t->spotify_track_uri, $orderedTracks);
         $preference = $user->getOrCreatePreferences();
 
-        $this->playContext($user, $uris, $resolvedOffset, $preference->preferred_device_id);
+        $this->playContext(
+            $user,
+            $uris,
+            $resolvedOffset,
+            $preference->preferred_device_id,
+            $contextType,
+            $contextUri
+        );
 
         return $orderedTracks[$resolvedOffset] ?? null;
     }

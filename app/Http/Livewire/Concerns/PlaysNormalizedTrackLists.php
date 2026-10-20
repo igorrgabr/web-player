@@ -99,6 +99,16 @@ trait PlaysNormalizedTrackLists
         ]);
     }
 
+    protected function playbackContextType(): string
+    {
+        return 'catalog';
+    }
+
+    protected function playbackContextUri(): ?string
+    {
+        return null;
+    }
+
     public function playTrackAtIndex(int $index, SpotifyPlayerService $playerService): void
     {
         if (! isset($this->tracks[$index])) {
@@ -108,7 +118,13 @@ trait PlaysNormalizedTrackLists
         $this->errorMessage = null;
 
         try {
-            $selectedTrack = $playerService->playNormalizedTrackList(Auth::user(), $this->tracks, $index);
+            $selectedTrack = $playerService->playNormalizedTrackList(
+                Auth::user(),
+                $this->tracks,
+                $index,
+                $this->playbackContextType(),
+                $this->playbackContextUri()
+            );
 
             if ($selectedTrack) {
                 $isFavorited = in_array($selectedTrack->spotify_track_id, $this->favoritedTrackIds, true);
@@ -126,6 +142,8 @@ trait PlaysNormalizedTrackLists
                     'durationMs' => $selectedTrack->duration_ms,
                     'offset' => $index,
                 ]);
+
+                $this->emit('playHistoryUpdated');
             }
         } catch (SpotifyApiException $exception) {
             $this->errorMessage = $exception->getMessage();

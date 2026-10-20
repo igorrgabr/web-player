@@ -25,6 +25,7 @@ class PlayerController extends Controller
     public function index(Request $request): View
     {
         $preferences = $request->user()->getOrCreatePreferences();
+        $preferences->load('lastPlayedTrack');
 
         return view('layouts.app', [
             'preferences' => $preferences,

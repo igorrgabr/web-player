@@ -31,6 +31,7 @@ class SearchCatalog extends Component
 
     protected $listeners = [
         'refreshFavoritesState' => 'syncFavoritedTrackIds',
+        'playlistsUpdated' => 'syncUserLibraryState',
     ];
 
     public function mount(SpotifyCatalogService $catalogService): void
@@ -135,6 +136,11 @@ class SearchCatalog extends Component
         } catch (SpotifyApiException $exception) {
             $this->errorMessage = $exception->getMessage();
         }
+    }
+
+    protected function playbackContextType(): string
+    {
+        return 'search';
     }
 
     public function render(): View

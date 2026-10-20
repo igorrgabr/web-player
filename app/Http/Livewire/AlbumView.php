@@ -20,6 +20,7 @@ class AlbumView extends Component
 
     protected $listeners = [
         'refreshFavoritesState' => 'syncFavoritedTrackIds',
+        'playlistsUpdated' => 'syncUserLibraryState',
     ];
 
     public function mount(string $albumId, SpotifyCatalogService $catalogService): void
@@ -44,6 +45,16 @@ class AlbumView extends Component
         } catch (SpotifyApiException $exception) {
             $this->errorMessage = $exception->getMessage();
         }
+    }
+
+    protected function playbackContextType(): string
+    {
+        return 'album';
+    }
+
+    protected function playbackContextUri(): ?string
+    {
+        return $this->albumId !== '' ? ('spotify:album:' . $this->albumId) : null;
     }
 
     public function render(): View

@@ -1,5 +1,18 @@
 @props(['preferences'])
 
+@php
+    $lastTrack = $preferences->lastPlayedTrack;
+    $lastTrackPayload = $lastTrack ? [
+        'id' => $lastTrack->spotify_track_id,
+        'uri' => $lastTrack->spotify_track_uri,
+        'title' => $lastTrack->title,
+        'artistName' => $lastTrack->artist_name,
+        'albumName' => $lastTrack->album_name,
+        'albumCoverUrl' => $lastTrack->album_cover_url,
+        'durationMs' => (int) $lastTrack->duration_ms,
+    ] : null;
+@endphp
+
 <footer
     id="global-player-bar"
     wire:ignore
@@ -9,9 +22,10 @@
         shuffleEnabled: @js((bool) $preferences->shuffle_enabled),
         preferredDeviceId: @js($preferences->preferred_device_id),
         lastPlayedTrackUri: @js($preferences->last_played_track_uri),
+        lastPlayedTrack: @js($lastTrackPayload),
     })"
     x-init="initPlayer()"
-    class="h-24 bg-zinc-900 border-t border-zinc-800 px-6 flex items-center justify-between gap-4 shrink-0 select-none relative"
+    class="h-24 bg-zinc-900 border-t border-zinc-800 px-4 sm:px-6 flex items-center justify-between gap-3 sm:gap-4 shrink-0 select-none relative"
 >
     <template x-if="errorMessage">
         <div
@@ -24,18 +38,21 @@
     </template>
 
     <!-- Faixa Atual -->
-    <div class="w-1/4 min-w-[180px] flex items-center gap-3">
+    <div class="w-1/3 sm:w-1/4 min-w-0 sm:min-w-[180px] flex items-center gap-2 sm:gap-3">
         <template x-if="currentTrack.albumCoverUrl">
-            <img :src="currentTrack.albumCoverUrl" :alt="currentTrack.albumName" class="w-14 h-14 rounded-lg object-cover shadow" />
+            <img :src="currentTrack.albumCoverUrl" :alt="currentTrack.albumName" class="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover shadow" />
         </template>
+        @if ($lastTrack && $lastTrack->album_cover_url)
+            <img x-show="false" src="{{ $lastTrack->album_cover_url }}" alt="{{ $lastTrack->album_name }}" class="hidden" />
+        @endif
         <template x-if="!currentTrack.albumCoverUrl">
-            <div class="w-14 h-14 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-500 text-xs">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-500 text-xs">
                 ♪
             </div>
         </template>
         <div class="truncate">
-            <p class="text-sm font-semibold text-white truncate" x-text="currentTrack.title || 'Nenhuma Faixa em reprodução'"></p>
-            <p class="text-xs text-zinc-400 truncate" x-text="currentTrack.artistName || 'Selecione uma Faixa para iniciar'"></p>
+            <p class="text-sm font-semibold text-white truncate" x-text="currentTrack.title || 'Nenhuma Faixa em reprodução'">{{ $lastTrack->title ?? 'Nenhuma Faixa em reprodução' }}</p>
+            <p class="text-xs text-zinc-400 truncate" x-text="currentTrack.artistName || 'Selecione uma Faixa para iniciar'">{{ $lastTrack->artist_name ?? 'Selecione uma Faixa para iniciar' }}</p>
         </div>
         <template x-if="currentTrack.uri">
             <button
@@ -119,7 +136,7 @@
     </div>
 
     <!-- Dispositivo de Reprodução e Volume -->
-    <div class="w-1/4 min-w-[200px] flex items-center justify-end gap-4 relative">
+    <div class="w-auto sm:w-1/4 sm:min-w-[200px] flex items-center justify-end gap-2 sm:gap-4 relative shrink-0">
         <div class="relative">
             <button
                 type="button"
@@ -162,7 +179,7 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-2 w-28">
+        <div class="hidden sm:flex items-center gap-2 w-28">
             <button type="button" @click="toggleMute()" class="text-zinc-400 hover:text-white text-xs">
                 <span x-text="volume === 0 ? '🔇' : '🔊'"></span>
             </button>

@@ -31,6 +31,12 @@
         </div>
     @endif
 
+    @if ($playlistNotice)
+        <div role="status" class="rounded-xl bg-emerald-950/60 border border-emerald-800 px-4 py-3 text-sm text-emerald-200">
+            {{ $playlistNotice }}
+        </div>
+    @endif
+
     @if (count($tracks) === 0)
         <div class="rounded-2xl bg-zinc-900/40 border border-zinc-800/70 p-10 text-center space-y-3">
             <p class="text-zinc-300 font-medium">Você ainda não adicionou nenhuma Faixa Favorita.</p>
@@ -60,19 +66,12 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-4 shrink-0">
-                        <button
-                            type="button"
-                            wire:click="toggleFavoriteAtIndex({{ $index }})"
-                            class="text-base text-emerald-400 hover:text-emerald-300 transition"
-                            title="Remover das Faixas Favoritas"
-                        >
-                            ♥
-                        </button>
-                        <span class="text-xs font-mono text-zinc-400">
-                            {{ \App\Services\Spotify\SpotifyCatalogService::formatDuration($track['duration_ms']) }}
-                        </span>
-                    </div>
+                    <x-track-row-actions
+                        :index="$index"
+                        :track="$track"
+                        :favorited-ids="$favoritedTrackIds"
+                        :playlists="$userPlaylists"
+                    />
                 </div>
             @endforeach
         </div>

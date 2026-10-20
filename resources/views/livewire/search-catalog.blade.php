@@ -21,10 +21,16 @@
         </div>
     @endif
 
+    @if ($playlistNotice)
+        <div role="status" class="rounded-xl bg-emerald-950/60 border border-emerald-800 px-4 py-3 text-sm text-emerald-200">
+            {{ $playlistNotice }}
+        </div>
+    @endif
+
     @if (count($tracks) > 0)
         <div class="space-y-3">
             <h2 class="text-lg font-semibold text-white">Faixas</h2>
-            <div class="divide-y divide-zinc-800/60 rounded-xl bg-zinc-900/50 border border-zinc-800/80 overflow-hidden">
+            <div class="divide-y divide-zinc-800/60 rounded-xl bg-zinc-900/50 border border-zinc-800/80 overflow-visible">
                 @foreach ($tracks as $index => $track)
                     <div class="flex items-center justify-between gap-4 px-4 py-3 hover:bg-zinc-800/60 transition">
                         <div class="flex items-center gap-3 min-w-0">
@@ -46,20 +52,12 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-4 shrink-0">
-                            @php($isFav = in_array($track['spotify_track_id'], $favoritedTrackIds ?? [], true))
-                            <button
-                                type="button"
-                                wire:click="toggleFavoriteAtIndex({{ $index }})"
-                                class="text-base transition {{ $isFav ? 'text-emerald-400' : 'text-zinc-500 hover:text-white' }}"
-                                title="{{ $isFav ? 'Remover das Faixas Favoritas' : 'Adicionar às Faixas Favoritas' }}"
-                            >
-                                {{ $isFav ? '♥' : '♡' }}
-                            </button>
-                            <span class="text-xs font-mono text-zinc-400">
-                                {{ \App\Services\Spotify\SpotifyCatalogService::formatDuration($track['duration_ms']) }}
-                            </span>
-                        </div>
+                        <x-track-row-actions
+                            :index="$index"
+                            :track="$track"
+                            :favorited-ids="$favoritedTrackIds"
+                            :playlists="$userPlaylists"
+                        />
                     </div>
                 @endforeach
             </div>

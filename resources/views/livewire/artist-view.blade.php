@@ -5,6 +5,12 @@
         </div>
     @endif
 
+    @if ($playlistNotice)
+        <div role="status" class="rounded-xl bg-emerald-950/60 border border-emerald-800 px-4 py-3 text-sm text-emerald-200">
+            {{ $playlistNotice }}
+        </div>
+    @endif
+
     @if (! empty($artist))
         <div class="flex flex-col sm:flex-row items-start sm:items-end gap-6 pb-6 border-b border-zinc-800">
             @if ($artist['image_url'] ?? null)
@@ -45,20 +51,12 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-4 shrink-0">
-                            @php($isFav = in_array($track['spotify_track_id'], $favoritedTrackIds ?? [], true))
-                            <button
-                                type="button"
-                                wire:click="toggleFavoriteAtIndex({{ $index }})"
-                                class="text-base transition {{ $isFav ? 'text-emerald-400' : 'text-zinc-500 hover:text-white' }}"
-                                title="{{ $isFav ? 'Remover das Faixas Favoritas' : 'Adicionar às Faixas Favoritas' }}"
-                            >
-                                {{ $isFav ? '♥' : '♡' }}
-                            </button>
-                            <span class="text-xs font-mono text-zinc-400">
-                                {{ \App\Services\Spotify\SpotifyCatalogService::formatDuration($track['duration_ms']) }}
-                            </span>
-                        </div>
+                        <x-track-row-actions
+                            :index="$index"
+                            :track="$track"
+                            :favorited-ids="$favoritedTrackIds"
+                            :playlists="$userPlaylists"
+                        />
                     </div>
                 @endforeach
             </div>

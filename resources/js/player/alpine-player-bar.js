@@ -15,7 +15,7 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
 
         isPaused: true,
         positionMs: 0,
-        durationMs: 0,
+        durationMs: Number(initialConfig.lastPlayedTrack?.durationMs || 0),
         isDraggingSeek: false,
         progressTimer: null,
 
@@ -25,12 +25,12 @@ export function createSpotifyPlayerBar(initialConfig = {}) {
         shuffleEnabled: Boolean(initialConfig.shuffleEnabled),
 
         currentTrack: {
-            id: null,
-            uri: initialConfig.lastPlayedTrackUri || null,
-            title: null,
-            artistName: null,
-            albumName: null,
-            albumCoverUrl: null,
+            id: initialConfig.lastPlayedTrack?.id || null,
+            uri: initialConfig.lastPlayedTrack?.uri || initialConfig.lastPlayedTrackUri || null,
+            title: initialConfig.lastPlayedTrack?.title || null,
+            artistName: initialConfig.lastPlayedTrack?.artistName || null,
+            albumName: initialConfig.lastPlayedTrack?.albumName || null,
+            albumCoverUrl: initialConfig.lastPlayedTrack?.albumCoverUrl || null,
             favorited: false,
         },
 

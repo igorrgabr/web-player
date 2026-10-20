@@ -112,13 +112,13 @@ class LocalPlaylistsTest extends TestCase
         $track1 = \App\Models\Track::where('spotify_track_id', 'track-pl-1')->firstOrFail();
         $track2 = \App\Models\Track::where('spotify_track_id', 'track-pl-2')->firstOrFail();
 
-        $this->assertDatabaseHas('local_playlist_tracks', [
+        $this->assertDatabaseHas('playlist_tracks', [
             'local_playlist_id' => $playlistA->id,
             'track_id' => $track1->id,
             'position' => 1,
         ]);
 
-        $this->assertDatabaseHas('local_playlist_tracks', [
+        $this->assertDatabaseHas('playlist_tracks', [
             'local_playlist_id' => $playlistA->id,
             'track_id' => $track2->id,
             'position' => 2,

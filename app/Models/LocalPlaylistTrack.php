@@ -10,6 +10,8 @@ class LocalPlaylistTrack extends Model
 {
     use HasFactory;
 
+    protected $table = 'playlist_tracks';
+
     public $timestamps = false;
 
     protected $fillable = [

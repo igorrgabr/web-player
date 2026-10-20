@@ -14,9 +14,13 @@
     @if (! empty($playlist))
         <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 pb-6 border-b border-zinc-800">
             <div class="flex items-end gap-5 min-w-0">
-                <div class="w-32 h-32 rounded-2xl bg-gradient-to-br from-indigo-600 to-zinc-900 flex items-center justify-center text-4xl text-white shadow-2xl shrink-0">
-                    ♫
-                </div>
+                @if ($playlist['cover_url'] ?? null)
+                    <img src="{{ $playlist['cover_url'] }}" alt="{{ $playlist['name'] }}" class="w-32 h-32 rounded-2xl object-cover shadow-2xl shrink-0" />
+                @else
+                    <div class="w-32 h-32 rounded-2xl bg-gradient-to-br from-indigo-600 to-zinc-900 flex items-center justify-center text-4xl text-white shadow-2xl shrink-0">
+                        ♫
+                    </div>
+                @endif
                 <div class="space-y-1.5 min-w-0">
                     <p class="text-xs font-semibold uppercase tracking-widest text-emerald-400">Playlist Local</p>
                     <h1 class="text-3xl font-extrabold text-white truncate">{{ $playlist['name'] }}</h1>
@@ -175,3 +179,4 @@
         @endif
     @endif
 </section>
+

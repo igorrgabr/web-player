@@ -54,3 +54,4 @@
         {{ \App\Services\Spotify\SpotifyCatalogService::formatDuration($track['duration_ms']) }}
     </span>
 </div>
+

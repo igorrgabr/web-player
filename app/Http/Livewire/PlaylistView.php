@@ -49,6 +49,7 @@ class PlaylistView extends Component
             'id' => (int) $model->id,
             'name' => $model->name,
             'description' => $model->description,
+            'cover_url' => $model->cover_url,
         ];
 
         if (! $this->isEditing) {
@@ -171,3 +172,4 @@ class PlaylistView extends Component
         return view('livewire.playlist-view');
     }
 }
+

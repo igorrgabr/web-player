@@ -31,7 +31,7 @@ class SearchCatalog extends Component
 
     protected $listeners = [
         'refreshFavoritesState' => 'syncFavoritedTrackIds',
-        'playlistsUpdated' => 'syncFavoritedTrackIds',
+        'playlistsUpdated' => 'syncUserLibraryState',
     ];
 
     public function mount(SpotifyCatalogService $catalogService): void

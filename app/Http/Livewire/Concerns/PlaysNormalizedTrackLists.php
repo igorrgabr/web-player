@@ -14,7 +14,7 @@ trait PlaysNormalizedTrackLists
     public array $userPlaylists = [];
     public ?string $playlistNotice = null;
 
-    public function syncFavoritedTrackIds(): void
+    public function syncUserLibraryState(): void
     {
         $user = Auth::user();
         if (! $user) {
@@ -33,6 +33,11 @@ trait PlaysNormalizedTrackLists
             ])
             ->values()
             ->all();
+    }
+
+    public function syncFavoritedTrackIds(): void
+    {
+        $this->syncUserLibraryState();
     }
 
     public function addTrackToPlaylist(int $index, int $playlistId): void

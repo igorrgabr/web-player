@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class LocalPlaylist extends Model
@@ -16,6 +18,7 @@ class LocalPlaylist extends Model
         'user_id',
         'name',
         'description',
+        'cover_url',
     ];
 
     public function user(): BelongsTo
@@ -30,26 +33,36 @@ class LocalPlaylist extends Model
 
     public function addNormalizedTrack(array $normalizedTrack): bool
     {
-        $track = Track::upsertFromCatalog($normalizedTrack);
+        return DB::transaction(function () use ($normalizedTrack): bool {
+            $track = Track::upsertFromCatalog($normalizedTrack);
 
-        $alreadyExists = $this->playlistTracks()
-            ->where('track_id', $track->id)
-            ->exists();
+            $alreadyExists = $this->playlistTracks()
+                ->where('track_id', $track->id)
+                ->exists();
 
-        if ($alreadyExists) {
-            return false;
-        }
+            if ($alreadyExists) {
+                return false;
+            }
 
-        $nextPosition = ((int) $this->playlistTracks()->max('position')) + 1;
+            $nextPosition = ((int) $this->playlistTracks()->max('position')) + 1;
 
-        LocalPlaylistTrack::create([
-            'local_playlist_id' => $this->id,
-            'track_id' => $track->id,
-            'position' => $nextPosition,
-            'added_at' => now(),
-        ]);
+            try {
+                LocalPlaylistTrack::create([
+                    'local_playlist_id' => $this->id,
+                    'track_id' => $track->id,
+                    'position' => $nextPosition,
+                    'added_at' => now(),
+                ]);
+            } catch (QueryException $exception) {
+                return false;
+            }
 
-        return true;
+            if (! $this->cover_url && $track->album_cover_url) {
+                $this->update(['cover_url' => $track->album_cover_url]);
+            }
+
+            return true;
+        });
     }
 
     public function removeTrackBySpotifyId(string $spotifyTrackId): void
@@ -82,19 +95,17 @@ class LocalPlaylist extends Model
             $items[$fromIndex] = $items[$targetIndex];
             $items[$targetIndex] = $temp;
 
-            foreach ($items as $idx => $entry) {
-                $newPos = $idx + 1;
-                if ((int) $entry->position !== $newPos) {
-                    $entry->update(['position' => $newPos]);
-                }
-            }
+            $this->persistSequentialPositions($items);
         });
     }
 
     public function resequencePositions(): void
     {
-        $items = $this->playlistTracks()->get()->values();
+        $this->persistSequentialPositions($this->playlistTracks()->get()->values());
+    }
 
+    private function persistSequentialPositions(Collection $items): void
+    {
         foreach ($items as $idx => $entry) {
             $newPos = $idx + 1;
             if ((int) $entry->position !== $newPos) {

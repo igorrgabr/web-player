@@ -13,12 +13,13 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('name', 120);
             $table->text('description')->nullable();
+            $table->text('cover_url')->nullable();
             $table->timestamps();
 
             $table->index(['user_id', 'created_at']);
         });
 
-        Schema::create('local_playlist_tracks', function (Blueprint $table) {
+        Schema::create('playlist_tracks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('local_playlist_id')->constrained('local_playlists')->cascadeOnDelete();
             $table->foreignId('track_id')->constrained('tracks')->cascadeOnDelete();
@@ -32,7 +33,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('local_playlist_tracks');
+        Schema::dropIfExists('playlist_tracks');
         Schema::dropIfExists('local_playlists');
     }
 };

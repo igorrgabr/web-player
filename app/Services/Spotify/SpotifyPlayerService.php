@@ -39,7 +39,8 @@ class SpotifyPlayerService
         int $offset = 0,
         ?string $deviceId = null,
         ?string $contextType = null,
-        ?string $contextUri = null
+        ?string $contextId = null,
+        ?\App\Models\Track $resolvedTrack = null
     ): ?string {
         $safeOffset = max(0, min($offset, max(0, count($uris) - 1)));
 
@@ -61,7 +62,7 @@ class SpotifyPlayerService
 
         if ($currentUri !== null) {
             $preference = $user->getOrCreatePreferences();
-            $matchedTrack = \App\Models\Track::where('spotify_track_uri', $currentUri)->first();
+            $matchedTrack = $resolvedTrack ?? \App\Models\Track::where('spotify_track_uri', $currentUri)->first();
 
             $preference->update([
                 'last_played_track_id' => $matchedTrack ? $matchedTrack->id : $preference->last_played_track_id,
@@ -74,7 +75,7 @@ class SpotifyPlayerService
                     $user,
                     $matchedTrack,
                     $contextType ?? 'context',
-                    $contextUri
+                    $contextId
                 );
             }
         }
@@ -87,7 +88,7 @@ class SpotifyPlayerService
         array $normalizedTracks,
         int $offset = 0,
         ?string $contextType = null,
-        ?string $contextUri = null
+        ?string $contextId = null
     ): ?\App\Models\Track {
         if (empty($normalizedTracks)) {
             return null;
@@ -110,6 +111,7 @@ class SpotifyPlayerService
 
         $uris = array_map(fn ($t) => $t->spotify_track_uri, $orderedTracks);
         $preference = $user->getOrCreatePreferences();
+        $selectedTrack = $orderedTracks[$resolvedOffset] ?? null;
 
         $this->playContext(
             $user,
@@ -117,10 +119,11 @@ class SpotifyPlayerService
             $resolvedOffset,
             $preference->preferred_device_id,
             $contextType,
-            $contextUri
+            $contextId,
+            $selectedTrack
         );
 
-        return $orderedTracks[$resolvedOffset] ?? null;
+        return $selectedTrack;
     }
 
     public function pause(User $user, ?string $deviceId = null): void

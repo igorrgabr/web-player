@@ -59,21 +59,25 @@ class HomeView extends Component
             ->values()
             ->all();
 
+        $seenTrackIds = [];
         $this->tracks = $user->playHistories()
             ->with('track')
-            ->limit(self::RECENT_TRACKS_LIMIT)
+            ->limit(self::RECENT_TRACKS_LIMIT * 3)
             ->get()
-            ->map(function ($entry) {
+            ->map(function ($entry) use (&$seenTrackIds) {
                 $track = $entry->track;
-                if (! $track) {
+                if (! $track || in_array($track->id, $seenTrackIds, true)) {
                     return null;
                 }
+
+                $seenTrackIds[] = $track->id;
 
                 return array_merge($track->toNormalizedArray(), [
                     'played_at' => optional($entry->played_at)->format('d/m/Y H:i'),
                 ]);
             })
             ->filter()
+            ->take(self::RECENT_TRACKS_LIMIT)
             ->values()
             ->all();
     }
@@ -88,3 +92,4 @@ class HomeView extends Component
         return view('livewire.home-view');
     }
 }
+

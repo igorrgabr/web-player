@@ -38,7 +38,7 @@
     </template>
 
     <!-- Faixa Atual -->
-    <div class="w-1/3 sm:w-1/4 min-w-[140px] sm:min-w-[180px] flex items-center gap-3">
+    <div class="w-1/3 sm:w-1/4 min-w-0 sm:min-w-[180px] flex items-center gap-2 sm:gap-3">
         <template x-if="currentTrack.albumCoverUrl">
             <img :src="currentTrack.albumCoverUrl" :alt="currentTrack.albumName" class="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover shadow" />
         </template>
@@ -136,7 +136,7 @@
     </div>
 
     <!-- Dispositivo de Reprodução e Volume -->
-    <div class="w-1/4 min-w-[200px] flex items-center justify-end gap-4 relative">
+    <div class="w-auto sm:w-1/4 sm:min-w-[200px] flex items-center justify-end gap-2 sm:gap-4 relative shrink-0">
         <div class="relative">
             <button
                 type="button"
@@ -179,7 +179,7 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-2 w-28">
+        <div class="hidden sm:flex items-center gap-2 w-28">
             <button type="button" @click="toggleMute()" class="text-zinc-400 hover:text-white text-xs">
                 <span x-text="volume === 0 ? '🔇' : '🔊'"></span>
             </button>

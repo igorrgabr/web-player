@@ -1,35 +1,76 @@
 <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
     <!-- Barra de Navegação Mobile -->
-    <header class="md:hidden bg-black border-b border-zinc-900 px-4 py-3 flex items-center justify-between gap-2 shrink-0">
-        <div class="flex items-center gap-2">
-            <div class="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-zinc-950 font-bold text-xs">
-                W
+    <header class="md:hidden bg-black border-b border-zinc-900 px-4 py-3 space-y-2 shrink-0">
+        <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-zinc-950 font-bold text-xs">
+                    W
+                </div>
+                <span class="font-bold text-sm text-white">Web Player</span>
             </div>
-            <span class="font-bold text-sm text-white">Web Player</span>
+            <div class="flex items-center gap-2">
+                <button
+                    type="button"
+                    wire:click="$toggle('showCreatePlaylistForm')"
+                    class="px-2.5 py-1 rounded-lg text-xs font-semibold text-emerald-400 border border-zinc-800"
+                >
+                    + Playlist Local
+                </button>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="px-2 py-1 text-xs text-zinc-400 hover:text-red-400 transition">
+                        Sair
+                    </button>
+                </form>
+            </div>
         </div>
-        <nav class="flex items-center gap-1" aria-label="Navegação Mobile">
+        <nav class="flex items-center gap-1 overflow-x-auto" aria-label="Navegação Mobile">
             <button
                 type="button"
                 wire:click="navigateTo('home')"
-                class="px-2.5 py-1.5 rounded-lg text-xs font-medium {{ $activeView === 'home' ? 'bg-zinc-800 text-white' : 'text-zinc-400' }}"
+                class="px-2.5 py-1.5 rounded-lg text-xs font-medium shrink-0 {{ $activeView === 'home' ? 'bg-zinc-800 text-white' : 'text-zinc-400' }}"
             >
                 Início
             </button>
             <button
                 type="button"
                 wire:click="navigateTo('search')"
-                class="px-2.5 py-1.5 rounded-lg text-xs font-medium {{ $activeView === 'search' ? 'bg-zinc-800 text-white' : 'text-zinc-400' }}"
+                class="px-2.5 py-1.5 rounded-lg text-xs font-medium shrink-0 {{ $activeView === 'search' ? 'bg-zinc-800 text-white' : 'text-zinc-400' }}"
             >
                 Buscar
             </button>
             <button
                 type="button"
                 wire:click="navigateTo('favorites')"
-                class="px-2.5 py-1.5 rounded-lg text-xs font-medium {{ $activeView === 'favorites' ? 'bg-zinc-800 text-white' : 'text-zinc-400' }}"
+                class="px-2.5 py-1.5 rounded-lg text-xs font-medium shrink-0 {{ $activeView === 'favorites' ? 'bg-zinc-800 text-white' : 'text-zinc-400' }}"
             >
                 Favoritas
             </button>
         </nav>
+
+        @if ($showCreatePlaylistForm)
+            <form wire:submit.prevent="createPlaylist" class="space-y-2 rounded-xl bg-zinc-900/95 border border-zinc-800 p-3">
+                <input
+                    type="text"
+                    wire:model.defer="newPlaylistName"
+                    placeholder="Nome da Playlist Local"
+                    required
+                    maxlength="120"
+                    class="w-full rounded-lg bg-zinc-950 border border-zinc-700 px-2.5 py-1.5 text-xs text-white placeholder-zinc-500 focus:border-emerald-500 focus:outline-none"
+                />
+                <input
+                    type="text"
+                    wire:model.defer="newPlaylistDescription"
+                    placeholder="Descrição (opcional)"
+                    maxlength="500"
+                    class="w-full rounded-lg bg-zinc-950 border border-zinc-700 px-2.5 py-1.5 text-xs text-white placeholder-zinc-500 focus:border-emerald-500 focus:outline-none"
+                />
+                <div class="flex items-center justify-end gap-2">
+                    <button type="button" wire:click="$set('showCreatePlaylistForm', false)" class="text-xs text-zinc-400 px-2 py-1">Cancelar</button>
+                    <button type="submit" class="rounded-full bg-emerald-500 text-zinc-950 font-semibold text-xs px-3 py-1">Salvar</button>
+                </div>
+            </form>
+        @endif
     </header>
 
     <!-- Barra Lateral de Navegação (Desktop) -->

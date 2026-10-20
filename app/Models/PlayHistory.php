@@ -16,7 +16,7 @@ class PlayHistory extends Model
         'user_id',
         'track_id',
         'context_type',
-        'context_uri',
+        'context_id',
         'played_at',
     ];
 
@@ -38,13 +38,13 @@ class PlayHistory extends Model
         User $user,
         Track $track,
         ?string $contextType = null,
-        ?string $contextUri = null
+        ?string $contextId = null
     ): self {
         return static::create([
             'user_id' => $user->id,
             'track_id' => $track->id,
             'context_type' => $contextType,
-            'context_uri' => $contextUri,
+            'context_id' => $contextId,
             'played_at' => now(),
         ]);
     }

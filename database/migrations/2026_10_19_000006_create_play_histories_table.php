@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('track_id')->constrained('tracks')->cascadeOnDelete();
             $table->string('context_type', 40)->nullable();
-            $table->string('context_uri', 255)->nullable();
+            $table->string('context_id', 255)->nullable();
             $table->timestamp('played_at')->useCurrent();
 
             $table->index(['user_id', 'played_at']);

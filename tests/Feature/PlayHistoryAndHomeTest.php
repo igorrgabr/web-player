@@ -78,7 +78,7 @@ class PlayHistoryAndHomeTest extends TestCase
             'user_id' => $listener->id,
             'track_id' => $trackAero->id,
             'context_type' => 'album',
-            'context_uri' => 'spotify:album:album-disc',
+            'context_id' => 'spotify:album:album-disc',
         ]);
 
         $this->assertDatabaseHas('user_preferences', [
